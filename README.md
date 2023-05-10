@@ -26,6 +26,9 @@ to run, test and build a Check. More advanced documentation can be found [here][
 For more information on integrations, please reference our [documentation][11] and
 [knowledge base][12]. You can also visit our [help page][13] to connect with us.
 
+## 子模块
+在 guance 修改后提交 MR 合并进 master 分支。
+在 ddtrace 中 git submodule update --init --remote
 
 [1]: https://raw.githubusercontent.com/DataDog/integrations-core/badges/test-results.svg
 [2]: https://github.com/DataDog/integrations-core/actions/workflows/master.yml
