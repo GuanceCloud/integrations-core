@@ -608,6 +608,20 @@ jmx_metrics:
             metric_type: gauge
             alias: kafka.replication.active_controller_count
     - include:
+        domain: 'kafka.controller'
+        bean: 'kafka.controller:type=KafkaController,name=GlobalTopicCount'
+        attribute:
+          Value:
+            metric_type: gauge
+            alias: kafka.replication.global_topic_count
+    - include:
+        domain: 'kafka.controller'
+        bean: 'kafka.controller:type=KafkaController,name=GlobalPartitionCount'
+        attribute:
+          Value:
+            metric_type: gauge
+            alias: kafka.replication.global_partition_count
+    - include:
         domain: 'kafka.server'
         bean: 'kafka.server:type=ReplicaManager,name=PartitionCount'
         attribute:
