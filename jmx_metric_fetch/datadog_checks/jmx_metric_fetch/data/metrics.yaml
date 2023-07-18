@@ -1,0 +1,23 @@
+jmx_metrics:
+
+  - include:
+      domain: java.lang
+      type: Threading
+      attribute:
+        TotalStartedThreadCount:
+          alias: jvm.total_thread_count
+          metric_type: gauge
+        PeakThreadCount:
+          alias: jvm.peak_thread_count
+          metric_type: gauge
+        DaemonThreadCount:
+          alias: jvm.daemon_thread_count
+          metric_type: gauge
+  - include:
+      domain: java.lang
+      type: MemoryPool
+      name: Code Cache
+      attribute:
+        Usage.used:
+          alias: jvm.gc.code_cache.used
+          metric_type: gauge
