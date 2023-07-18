@@ -1,0 +1,30 @@
+init_config:
+  is_jmx: true
+  collect_default_metrics: true
+
+instances:
+  - jvm_direct: true
+    host: localhost
+    port: 9012
+    conf:
+      - include:
+          domain: java.lang
+          type: Threading
+          attribute:
+            TotalStartedThreadCount:
+              alias: jvm.total_thread_count
+              metric_type: gauge
+            PeakThreadCount:
+              alias: jvm.peak_thread_count
+              metric_type: gauge
+            DaemonThreadCount:
+              alias: jvm.daemon_thread_count
+              metric_type: gauge
+      - include:
+          domain: java.lang
+          type: MemoryPool
+          name: Code Cache
+          attribute:
+            Usage.used:
+              alias: jvm.gc.code_cache.used
+              metric_type: gauge
