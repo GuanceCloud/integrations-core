@@ -1,5 +1,4 @@
 jmx_metrics:
-
   - include:
       domain: java.lang
       type: Threading
