@@ -32,6 +32,8 @@ class DatabaseConfigurationError(Enum):
     pg_stat_statements_not_loaded = 'pg-stat-statements-not-loaded'
     undefined_explain_function = 'undefined-explain-function'
     high_pg_stat_statements_max = 'high-pg-stat-statements-max-configuration'
+    autodiscovered_databases_exceeds_limit = 'autodiscovered-databases-exceeds-limit'
+    autodiscovered_metrics_exceeds_collection_interval = "autodiscovered-metrics-exceeds-collection-interval"
 
 
 def warning_with_tags(warning_message, *args, **kwargs):
@@ -144,6 +146,19 @@ QUERY_PG_UPTIME = {
     'query': "SELECT FLOOR(EXTRACT(EPOCH FROM current_timestamp - pg_postmaster_start_time()))",
     'columns': [
         {'name': 'postgresql.uptime', 'type': 'gauge'},
+    ],
+}
+
+QUERY_PG_CONTROL_CHECKPOINT = {
+    'name': 'pg_control_checkpoint',
+    'query': """
+        SELECT timeline_id,
+               EXTRACT (EPOCH FROM now() - checkpoint_time)
+        FROM pg_control_checkpoint();
+""",
+    'columns': [
+        {'name': 'postgresql.control.timeline_id', 'type': 'gauge'},
+        {'name': 'postgresql.control.checkpoint_delay', 'type': 'gauge'},
     ],
 }
 
@@ -381,6 +396,43 @@ select txid_snapshot_xmin(txid_current_snapshot), txid_snapshot_xmax(txid_curren
         {'name': 'postgresql.snapshot.xmin', 'type': 'gauge'},
         {'name': 'postgresql.snapshot.xmax', 'type': 'gauge'},
         {'name': 'postgresql.snapshot.xip_count', 'type': 'gauge'},
+    ],
+}
+
+WAL_FILE_METRICS = {
+    'name': 'wal_metrics',
+    'query': """
+SELECT
+count(*),
+sum(size),
+EXTRACT (EPOCH FROM now() - min(modification))
+  FROM pg_ls_waldir();
+""",
+    'columns': [
+        {'name': 'postgresql.wal_count', 'type': 'gauge'},
+        {'name': 'postgresql.wal_size', 'type': 'gauge'},
+        {'name': 'postgresql.wal_age', 'type': 'gauge'},
+    ],
+}
+
+STAT_WAL_METRICS = {
+    'name': 'stat_wal_metrics',
+    'query': """
+SELECT wal_records, wal_fpi,
+       wal_bytes, wal_buffers_full,
+       wal_write, wal_sync,
+       wal_write_time, wal_sync_time
+  FROM pg_stat_wal
+""",
+    'columns': [
+        {'name': 'postgresql.wal.records', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.full_page_images', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.bytes', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.buffers_full', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.write', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.sync', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.write_time', 'type': 'monotonic_count'},
+        {'name': 'postgresql.wal.sync_time', 'type': 'monotonic_count'},
     ],
 }
 
