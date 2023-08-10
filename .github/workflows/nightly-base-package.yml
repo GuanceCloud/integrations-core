@@ -3,7 +3,7 @@ name: Nightly minimum base package test
 on:
   schedule:
   # 5 AM UTC
-  - cron: "0 5 * * *"
+  - cron: "0 5 * * 1"
 
 jobs:
   test:
