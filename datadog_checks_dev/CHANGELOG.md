@@ -1,5 +1,33 @@
 # CHANGELOG - Datadog Checks Dev
 
+## Unreleased
+
+## 22.1.1 / 2023-08-08
+
+***Fixed***:
+
+* Change equality requirement to subset in dependency validation. See [#15490](https://github.com/DataDog/integrations-core/pull/15490).
+* Upgrade postgres check to psycopg3. See [#15411](https://github.com/DataDog/integrations-core/pull/15411).
+* Bump the min base check version in the templates to 32.6.0. See [#15442](https://github.com/DataDog/integrations-core/pull/15442).
+* Update formatting of changelog templates. See [#15434](https://github.com/DataDog/integrations-core/pull/15434).
+* Improvements on dependency validation. See [#15416](https://github.com/DataDog/integrations-core/pull/15416).
+* Fix types for generated config models. See [#15334](https://github.com/DataDog/integrations-core/pull/15334).
+* Remove `legal_email` field from Ecosystem template. See [#15379](https://github.com/DataDog/integrations-core/pull/15379).
+* Add new release notes below the Unreleased section of changelogs. See [#15332](https://github.com/DataDog/integrations-core/pull/15332).
+
+## 22.1.0 / 2023-07-20
+
+***Added***:
+
+* Upgrade click to 8.1.6. See [#15272](https://github.com/DataDog/integrations-core/pull/15272).
+* Update generated config models. See [#15212](https://github.com/DataDog/integrations-core/pull/15212).
+* Prometheus parsing commands accept files in addition to endpoints. See [#15071](https://github.com/DataDog/integrations-core/pull/15071).
+
+***Fixed***:
+
+* Do not attempt to upgrade dependencies that break our tests. See [#15226](https://github.com/DataDog/integrations-core/pull/15226).
+* Fix formatting of list in click command help string. See [#15240](https://github.com/DataDog/integrations-core/pull/15240).
+
 ## 22.0.1 / 2023-07-10
 
 ***Fixed***:
