@@ -300,6 +300,16 @@ AgentCheck.check()                          # no more instance argument for chec
 
         <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_http</span>
 
+    <span class=nd>@property</span>
+    <span class=k>def</span> <span class=nf>diagnosis</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=c1># type: () -&gt; Diagnosis</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        A Diagnosis object to register explicit diagnostics and record diagnoses.</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+        <span class=k>if</span> <span class=ow>not</span> <span class=nb>hasattr</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=s1>&#39;_diagnosis&#39;</span><span class=p>):</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>_diagnosis</span> <span class=o>=</span> <span class=n>Diagnosis</span><span class=p>(</span><span class=n>sanitize</span><span class=o>=</span><span class=bp>self</span><span class=o>.</span><span class=n>sanitize</span><span class=p>)</span>
+        <span class=k>return</span> <span class=bp>self</span><span class=o>.</span><span class=n>_diagnosis</span>
+
     <span class=k>def</span> <span class=nf>get_tls_context</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>refresh</span><span class=o>=</span><span class=kc>False</span><span class=p>,</span> <span class=n>overrides</span><span class=o>=</span><span class=kc>None</span><span class=p>):</span>
         <span class=c1># type: (bool, Dict[AnyStr, Any]) -&gt; ssl.SSLContext</span>
         <span class=sd>&quot;&quot;&quot;</span>
@@ -370,7 +380,7 @@ AgentCheck.check()                          # no more instance argument for chec
 
             <span class=k>if</span> <span class=nb>isinstance</span><span class=p>(</span><span class=n>models_config</span><span class=p>,</span> <span class=n>BaseModel</span><span class=p>):</span>
                 <span class=c1># Also add aliases, if any</span>
-                <span class=n>known_options</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=nb>set</span><span class=p>(</span><span class=n>models_config</span><span class=o>.</span><span class=n>dict</span><span class=p>(</span><span class=n>by_alias</span><span class=o>=</span><span class=kc>True</span><span class=p>)))</span>
+                <span class=n>known_options</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=nb>set</span><span class=p>(</span><span class=n>models_config</span><span class=o>.</span><span class=n>model_dump</span><span class=p>(</span><span class=n>by_alias</span><span class=o>=</span><span class=kc>True</span><span class=p>)))</span>
 
         <span class=n>unknown_options</span> <span class=o>=</span> <span class=p>[</span><span class=n>option</span> <span class=k>for</span> <span class=n>option</span> <span class=ow>in</span> <span class=n>user_configs</span><span class=o>.</span><span class=n>keys</span><span class=p>()</span> <span class=k>if</span> <span class=n>option</span> <span class=ow>not</span> <span class=ow>in</span> <span class=n>known_options</span><span class=p>]</span>  <span class=c1># type: List[str]</span>
 
@@ -397,33 +407,29 @@ AgentCheck.check()                          # no more instance argument for chec
             <span class=n>module_parts</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=vm>__module__</span><span class=o>.</span><span class=n>split</span><span class=p>(</span><span class=s1>&#39;.&#39;</span><span class=p>)</span>
             <span class=n>package_path</span> <span class=o>=</span> <span class=s1>&#39;</span><span class=si>{}</span><span class=s1>.config_models&#39;</span><span class=o>.</span><span class=n>format</span><span class=p>(</span><span class=s1>&#39;.&#39;</span><span class=o>.</span><span class=n>join</span><span class=p>(</span><span class=n>module_parts</span><span class=p>[:</span><span class=mi>2</span><span class=p>]))</span>
         <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_shared</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
-            <span class=n>raw_shared_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_config_model_initialization_data</span><span class=p>()</span>
-            <span class=n>intg_shared_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_shared_config</span><span class=p>()</span>
-            <span class=n>raw_shared_config</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=n>intg_shared_config</span><span class=p>)</span>
-
-            <span class=n>shared_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>load_configuration_model</span><span class=p>(</span><span class=n>package_path</span><span class=p>,</span> <span class=s1>&#39;SharedConfig&#39;</span><span class=p>,</span> <span class=n>raw_shared_config</span><span class=p>)</span>
+            <span class=n>shared_config</span> <span class=o>=</span> <span class=n>copy</span><span class=o>.</span><span class=n>deepcopy</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>init_config</span><span class=p>)</span>
+            <span class=n>context</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_config_model_context</span><span class=p>(</span><span class=n>shared_config</span><span class=p>)</span>
+            <span class=n>shared_model</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>load_configuration_model</span><span class=p>(</span><span class=n>package_path</span><span class=p>,</span> <span class=s1>&#39;SharedConfig&#39;</span><span class=p>,</span> <span class=n>shared_config</span><span class=p>,</span> <span class=n>context</span><span class=p>)</span>
             <span class=k>try</span><span class=p>:</span>
-                <span class=bp>self</span><span class=o>.</span><span class=n>log_typos_in_options</span><span class=p>(</span><span class=n>intg_shared_config</span><span class=p>,</span> <span class=n>shared_config</span><span class=p>,</span> <span class=s1>&#39;init_config&#39;</span><span class=p>)</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>log_typos_in_options</span><span class=p>(</span><span class=n>shared_config</span><span class=p>,</span> <span class=n>shared_model</span><span class=p>,</span> <span class=s1>&#39;init_config&#39;</span><span class=p>)</span>
             <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
                 <span class=bp>self</span><span class=o>.</span><span class=n>log</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s2>&quot;Failed to detect typos in `init_config` section: </span><span class=si>%s</span><span class=s2>&quot;</span><span class=p>,</span> <span class=n>e</span><span class=p>)</span>
-            <span class=k>if</span> <span class=n>shared_config</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
-                <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_shared</span> <span class=o>=</span> <span class=n>shared_config</span>
+            <span class=k>if</span> <span class=n>shared_model</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_shared</span> <span class=o>=</span> <span class=n>shared_model</span>
 
         <span class=k>if</span> <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_instance</span> <span class=ow>is</span> <span class=kc>None</span><span class=p>:</span>
-            <span class=n>raw_instance_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_config_model_initialization_data</span><span class=p>()</span>
-            <span class=n>intg_instance_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_instance_config</span><span class=p>()</span>
-            <span class=n>raw_instance_config</span><span class=o>.</span><span class=n>update</span><span class=p>(</span><span class=n>intg_instance_config</span><span class=p>)</span>
-
-            <span class=n>instance_config</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>load_configuration_model</span><span class=p>(</span><span class=n>package_path</span><span class=p>,</span> <span class=s1>&#39;InstanceConfig&#39;</span><span class=p>,</span> <span class=n>raw_instance_config</span><span class=p>)</span>
+            <span class=n>instance_config</span> <span class=o>=</span> <span class=n>copy</span><span class=o>.</span><span class=n>deepcopy</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>instance</span><span class=p>)</span>
+            <span class=n>context</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>_get_config_model_context</span><span class=p>(</span><span class=n>instance_config</span><span class=p>)</span>
+            <span class=n>instance_model</span> <span class=o>=</span> <span class=bp>self</span><span class=o>.</span><span class=n>load_configuration_model</span><span class=p>(</span><span class=n>package_path</span><span class=p>,</span> <span class=s1>&#39;InstanceConfig&#39;</span><span class=p>,</span> <span class=n>instance_config</span><span class=p>,</span> <span class=n>context</span><span class=p>)</span>
             <span class=k>try</span><span class=p>:</span>
-                <span class=bp>self</span><span class=o>.</span><span class=n>log_typos_in_options</span><span class=p>(</span><span class=n>intg_instance_config</span><span class=p>,</span> <span class=n>instance_config</span><span class=p>,</span> <span class=s1>&#39;instances&#39;</span><span class=p>)</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>log_typos_in_options</span><span class=p>(</span><span class=n>instance_config</span><span class=p>,</span> <span class=n>instance_model</span><span class=p>,</span> <span class=s1>&#39;instances&#39;</span><span class=p>)</span>
             <span class=k>except</span> <span class=ne>Exception</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>
                 <span class=bp>self</span><span class=o>.</span><span class=n>log</span><span class=o>.</span><span class=n>debug</span><span class=p>(</span><span class=s2>&quot;Failed to detect typos in `instances` section: </span><span class=si>%s</span><span class=s2>&quot;</span><span class=p>,</span> <span class=n>e</span><span class=p>)</span>
-            <span class=k>if</span> <span class=n>instance_config</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
-                <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_instance</span> <span class=o>=</span> <span class=n>instance_config</span>
+            <span class=k>if</span> <span class=n>instance_model</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
+                <span class=bp>self</span><span class=o>.</span><span class=n>_config_model_instance</span> <span class=o>=</span> <span class=n>instance_model</span>
 
     <span class=nd>@staticmethod</span>
-    <span class=k>def</span> <span class=nf>load_configuration_model</span><span class=p>(</span><span class=n>import_path</span><span class=p>,</span> <span class=n>model_name</span><span class=p>,</span> <span class=n>config</span><span class=p>):</span>
+    <span class=k>def</span> <span class=nf>load_configuration_model</span><span class=p>(</span><span class=n>import_path</span><span class=p>,</span> <span class=n>model_name</span><span class=p>,</span> <span class=n>config</span><span class=p>,</span> <span class=n>context</span><span class=p>):</span>
         <span class=k>try</span><span class=p>:</span>
             <span class=n>package</span> <span class=o>=</span> <span class=n>importlib</span><span class=o>.</span><span class=n>import_module</span><span class=p>(</span><span class=n>import_path</span><span class=p>)</span>
         <span class=c1># TODO: remove the type ignore when we drop Python 2</span>
@@ -437,7 +443,7 @@ AgentCheck.check()                          # no more instance argument for chec
         <span class=n>model</span> <span class=o>=</span> <span class=nb>getattr</span><span class=p>(</span><span class=n>package</span><span class=p>,</span> <span class=n>model_name</span><span class=p>,</span> <span class=kc>None</span><span class=p>)</span>
         <span class=k>if</span> <span class=n>model</span> <span class=ow>is</span> <span class=ow>not</span> <span class=kc>None</span><span class=p>:</span>
             <span class=k>try</span><span class=p>:</span>
-                <span class=n>config_model</span> <span class=o>=</span> <span class=n>model</span><span class=p>(</span><span class=o>**</span><span class=n>config</span><span class=p>)</span>
+                <span class=n>config_model</span> <span class=o>=</span> <span class=n>model</span><span class=o>.</span><span class=n>model_validate</span><span class=p>(</span><span class=n>config</span><span class=p>,</span> <span class=n>context</span><span class=o>=</span><span class=n>context</span><span class=p>)</span>
             <span class=c1># TODO: remove the type ignore when we drop Python 2</span>
             <span class=k>except</span> <span class=n>ValidationError</span> <span class=k>as</span> <span class=n>e</span><span class=p>:</span>  <span class=c1># type: ignore</span>
                 <span class=n>errors</span> <span class=o>=</span> <span class=n>e</span><span class=o>.</span><span class=n>errors</span><span class=p>()</span>
@@ -462,17 +468,8 @@ AgentCheck.check()                          # no more instance argument for chec
             <span class=k>else</span><span class=p>:</span>
                 <span class=k>return</span> <span class=n>config_model</span>
 
-    <span class=k>def</span> <span class=nf>_get_shared_config</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
-        <span class=c1># Any extra fields will be available during a config model&#39;s initial validation stage</span>
-        <span class=k>return</span> <span class=n>copy</span><span class=o>.</span><span class=n>deepcopy</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>init_config</span><span class=p>)</span>
-
-    <span class=k>def</span> <span class=nf>_get_instance_config</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
-        <span class=c1># Any extra fields will be available during a config model&#39;s initial validation stage</span>
-        <span class=k>return</span> <span class=n>copy</span><span class=o>.</span><span class=n>deepcopy</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>instance</span><span class=p>)</span>
-
-    <span class=k>def</span> <span class=nf>_get_config_model_initialization_data</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
-        <span class=c1># Allow for advanced functionality during the initial root validation stage</span>
-        <span class=k>return</span> <span class=p>{</span><span class=s1>&#39;__data&#39;</span><span class=p>:</span> <span class=p>{</span><span class=s1>&#39;logger&#39;</span><span class=p>:</span> <span class=bp>self</span><span class=o>.</span><span class=n>log</span><span class=p>,</span> <span class=s1>&#39;warning&#39;</span><span class=p>:</span> <span class=bp>self</span><span class=o>.</span><span class=n>warning</span><span class=p>}}</span>
+    <span class=k>def</span> <span class=nf>_get_config_model_context</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>config</span><span class=p>):</span>
+        <span class=k>return</span> <span class=p>{</span><span class=s1>&#39;logger&#39;</span><span class=p>:</span> <span class=bp>self</span><span class=o>.</span><span class=n>log</span><span class=p>,</span> <span class=s1>&#39;warning&#39;</span><span class=p>:</span> <span class=bp>self</span><span class=o>.</span><span class=n>warning</span><span class=p>,</span> <span class=s1>&#39;configured_fields&#39;</span><span class=p>:</span> <span class=nb>frozenset</span><span class=p>(</span><span class=n>config</span><span class=p>)}</span>
 
     <span class=k>def</span> <span class=nf>register_secret</span><span class=p>(</span><span class=bp>self</span><span class=p>,</span> <span class=n>secret</span><span class=p>):</span>
         <span class=c1># type: (str) -&gt; None</span>
@@ -936,6 +933,16 @@ AgentCheck.check()                          # no more instance argument for chec
         <span class=bp>self</span><span class=o>.</span><span class=n>warnings</span> <span class=o>=</span> <span class=p>[]</span>
         <span class=k>return</span> <span class=n>warnings</span>
 
+    <span class=k>def</span> <span class=nf>get_diagnoses</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
+        <span class=c1># type: () -&gt; str</span>
+        <span class=sd>&quot;&quot;&quot;</span>
+<span class=sd>        Return the list of diagnosis as a JSON encoded string.</span>
+
+<span class=sd>        The agent calls this method to retrieve diagnostics from integrations. This method</span>
+<span class=sd>        runs explicit diagnostics if available.</span>
+<span class=sd>        &quot;&quot;&quot;</span>
+        <span class=k>return</span> <span class=n>json</span><span class=o>.</span><span class=n>dumps</span><span class=p>([</span><span class=n>d</span><span class=o>.</span><span class=n>_asdict</span><span class=p>()</span> <span class=k>for</span> <span class=n>d</span> <span class=ow>in</span> <span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>diagnosis</span><span class=o>.</span><span class=n>diagnoses</span> <span class=o>+</span> <span class=bp>self</span><span class=o>.</span><span class=n>diagnosis</span><span class=o>.</span><span class=n>run_explicit</span><span class=p>())])</span>
+
     <span class=k>def</span> <span class=nf>_get_requests_proxy</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
         <span class=c1># type: () -&gt; ProxySettings</span>
         <span class=c1># TODO: Remove with Agent 5</span>
@@ -1017,6 +1024,7 @@ AgentCheck.check()                          # no more instance argument for chec
     <span class=k>def</span> <span class=nf>run</span><span class=p>(</span><span class=bp>self</span><span class=p>):</span>
         <span class=c1># type: () -&gt; str</span>
         <span class=k>try</span><span class=p>:</span>
+            <span class=bp>self</span><span class=o>.</span><span class=n>diagnosis</span><span class=o>.</span><span class=n>clear</span><span class=p>()</span>
             <span class=c1># Ignore check initializations if running in a separate process</span>
             <span class=k>if</span> <span class=n>is_affirmative</span><span class=p>(</span><span class=bp>self</span><span class=o>.</span><span class=n>instance</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s1>&#39;process_isolation&#39;</span><span class=p>,</span> <span class=bp>self</span><span class=o>.</span><span class=n>init_config</span><span class=o>.</span><span class=n>get</span><span class=p>(</span><span class=s1>&#39;process_isolation&#39;</span><span class=p>,</span> <span class=kc>False</span><span class=p>))):</span>
                 <span class=kn>from</span> <span class=nn>..utils.replay.execute</span> <span class=kn>import</span> <span class=n>run_with_isolation</span>
