@@ -3,7 +3,7 @@ name: Nightly Python 2 tests
 on:
   schedule:
   # 4 AM UTC
-  - cron: "0 4 * * *"
+  - cron: "0 4 * * 1"
 
 jobs:
   test:
