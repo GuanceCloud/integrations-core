@@ -74,6 +74,19 @@ def test_e2e_profile__cisco_generic(dd_agent_check):
         )
 
     tag_rows = [
+        ['fru:4', 'power_admin_status:on', 'power_oper_status:off_cooling'],
+        ['fru:5', 'power_admin_status:power_cycle', 'power_oper_status:off_env_other'],
+        ['fru:6', 'power_admin_status:inline_auto', 'power_oper_status:off_env_power'],
+        ['fru:16', 'power_admin_status:power_cycle', 'power_oper_status:off_cooling'],
+        ['fru:19', 'power_admin_status:off', 'power_oper_status:off_denied'],
+        ['fru:20', 'power_admin_status:inline_auto', 'power_oper_status:off_env_fan'],
+        ['fru:23', 'power_admin_status:on', 'power_oper_status:on_but_fan_fail'],
+        ['fru:30', 'power_admin_status:inline_on', 'power_oper_status:off_connector_rating'],
+    ]
+    for tag_row in tag_rows:
+        aggregator.assert_metric('snmp.cefcFRUPowerStatus', metric_type=aggregator.GAUGE, tags=common_tags + tag_row)
+
+    tag_rows = [
         ['cpu:712'],
         ['cpu:25166'],
     ]
@@ -122,7 +135,7 @@ def test_e2e_profile__cisco_generic(dd_agent_check):
         aggregator.assert_metric('snmp.ciscoEnvMonFanState', metric_type=aggregator.GAUGE, tags=common_tags + tag_row)
 
     tag_rows = [
-        ['fan_status_index:11', 'fan_state:notFunctioning', 'fan_status_descr:oxen their but kept forward kept'],
+        ['fan_status_index:11', 'fan_state:not_functioning', 'fan_status_descr:oxen their but kept forward kept'],
         ['fan_status_index:16', 'fan_state:normal', 'fan_status_descr:acted'],
     ]
     for tag_row in tag_rows:
@@ -131,10 +144,30 @@ def test_e2e_profile__cisco_generic(dd_agent_check):
     aggregator.assert_metric('snmp.cswStackPortOperStatus', metric_type=aggregator.GAUGE, tags=common_tags)
 
     tag_rows = [
-        ['mac_addr:0x111111111111'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name1'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name2'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name3'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name4'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name5'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name6'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name7'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_name:name8'],
     ]
     for tag_row in tag_rows:
         aggregator.assert_metric('snmp.cswSwitchState', metric_type=aggregator.GAUGE, tags=common_tags + tag_row)
+
+    tag_rows = [
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name1', 'switch_state:progressing'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name2', 'switch_state:ready'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name3', 'switch_state:added'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name4', 'switch_state:ver_mismatch'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name5', 'switch_state:progressing'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name6', 'switch_state:sdm_mismatch'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name7', 'switch_state:provisioned'],
+        ['mac_addr:11:11:11:11:11:11', 'entity_physical_name:name8', 'switch_state:ver_mismatch'],
+    ]
+    for tag_row in tag_rows:
+        aggregator.assert_metric('snmp.cswSwitchInfo', metric_type=aggregator.GAUGE, tags=common_tags + tag_row)
 
     tag_rows = [
         ['fru:21'],
@@ -150,13 +183,13 @@ def test_e2e_profile__cisco_generic(dd_agent_check):
         aggregator.assert_metric('snmp.cefcFanTrayOperStatus', metric_type=aggregator.GAUGE, tags=common_tags + tag_row)
 
     tag_rows = [
-        ['fru:21', 'cefc_fan_tray_oper_status:warning', 'cefc_fan_tray_direction:frontToBack'],
-        ['fru:23', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:frontToBack'],
-        ['fru:25', 'cefc_fan_tray_oper_status:unknown', 'cefc_fan_tray_direction:frontToBack'],
+        ['fru:21', 'cefc_fan_tray_oper_status:warning', 'cefc_fan_tray_direction:front_to_back'],
+        ['fru:23', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:front_to_back'],
+        ['fru:25', 'cefc_fan_tray_oper_status:unknown', 'cefc_fan_tray_direction:front_to_back'],
         ['fru:27', 'cefc_fan_tray_oper_status:unknown', 'cefc_fan_tray_direction:unknown'],
-        ['fru:29', 'cefc_fan_tray_oper_status:unknown', 'cefc_fan_tray_direction:backToFront'],
-        ['fru:30', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:backToFront'],
-        ['fru:7', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:backToFront'],
+        ['fru:29', 'cefc_fan_tray_oper_status:unknown', 'cefc_fan_tray_direction:back_to_front'],
+        ['fru:30', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:back_to_front'],
+        ['fru:7', 'cefc_fan_tray_oper_status:up', 'cefc_fan_tray_direction:back_to_front'],
         ['fru:9', 'cefc_fan_tray_oper_status:warning', 'cefc_fan_tray_direction:unknown'],
     ]
     for tag_row in tag_rows:
