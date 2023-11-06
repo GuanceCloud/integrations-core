@@ -44,10 +44,6 @@ def instance_collect_wal_metrics():
     return False
 
 
-def instance_connection_timeout():
-    return 5000
-
-
 def instance_data_directory():
     return '/usr/local/pgsql/data'
 
@@ -81,7 +77,7 @@ def instance_idle_connection_timeout():
 
 
 def instance_ignore_databases():
-    return ['template%', 'rdsadmin', 'azure_maintenance']
+    return ['template%', 'rdsadmin', 'azure_maintenance', 'cloudsqladmin']
 
 
 def instance_log_unobfuscated_plans():
@@ -117,7 +113,7 @@ def instance_query_timeout():
 
 
 def instance_ssl():
-    return 'disable'
+    return 'allow'
 
 
 def instance_table_count_limit():

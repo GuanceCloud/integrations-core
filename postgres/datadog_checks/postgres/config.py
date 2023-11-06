@@ -14,6 +14,7 @@ DEFAULT_IGNORE_DATABASES = [
     'template%',
     'rdsadmin',
     'azure_maintenance',
+    'cloudsqladmin',
     'postgres',
 ]
 
@@ -58,12 +59,9 @@ class PostgresConfig:
                 '"dbname" parameter must be set OR autodiscovery must be enabled when using the "relations" parameter.'
             )
         self.max_connections = instance.get('max_connections', 30)
-        connection_timeout_ms = instance.get('connection_timeout', 5000)
-        # Convert milliseconds to seconds and ensure a minimum of 2 seconds, which is enforced by psycopg
-        self.connection_timeout = max(2, connection_timeout_ms / 1000)
         self.tags = self._build_tags(instance.get('tags', []))
 
-        ssl = instance.get('ssl', "disable")
+        ssl = instance.get('ssl', "allow")
         if ssl in SSL_MODES:
             self.ssl_mode = ssl
 
@@ -139,6 +137,9 @@ class PostgresConfig:
             'table_names': is_affirmative(obfuscator_options_config.get('collect_tables', True)),
             'collect_commands': is_affirmative(obfuscator_options_config.get('collect_commands', True)),
             'collect_comments': is_affirmative(obfuscator_options_config.get('collect_comments', True)),
+            # Config to enable/disable obfuscation of sql statements with go-sqllexer pkg
+            # Valid values for this can be found at https://github.com/DataDog/datadog-agent/blob/main/pkg/obfuscate/obfuscate.go#L108
+            'obfuscation_mode': obfuscator_options_config.get('obfuscation_mode', ''),
         }
         self.log_unobfuscated_queries = is_affirmative(instance.get('log_unobfuscated_queries', False))
         self.log_unobfuscated_plans = is_affirmative(instance.get('log_unobfuscated_plans', False))
