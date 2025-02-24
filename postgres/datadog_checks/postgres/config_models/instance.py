@@ -12,12 +12,21 @@ from __future__ import annotations
 from types import MappingProxyType
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from datadog_checks.base.utils.functions import identity
 from datadog_checks.base.utils.models import validation
 
 from . import defaults, validators
+
+
+class ManagedAuthentication(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    enabled: Optional[bool] = Field(None, examples=[False])
+    role_arn: Optional[str] = Field(None, examples=['arn:aws:iam::123456789012:role/MyRole'])
 
 
 class Aws(BaseModel):
@@ -26,7 +35,18 @@ class Aws(BaseModel):
         frozen=True,
     )
     instance_endpoint: Optional[str] = None
+    managed_authentication: Optional[ManagedAuthentication] = None
     region: Optional[str] = None
+
+
+class ManagedAuthentication1(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    client_id: Optional[str] = None
+    enabled: Optional[bool] = Field(None, examples=[False])
+    identity_scope: Optional[str] = Field(None, examples=['https://ossrdbms-aad.database.windows.net/.default'])
 
 
 class Azure(BaseModel):
@@ -36,6 +56,15 @@ class Azure(BaseModel):
     )
     deployment_type: Optional[str] = None
     fully_qualified_domain_name: Optional[str] = None
+    managed_authentication: Optional[ManagedAuthentication1] = None
+
+
+class CollectRawQueryStatement(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    enabled: Optional[bool] = None
 
 
 class CollectSchemas(BaseModel):
@@ -45,6 +74,12 @@ class CollectSchemas(BaseModel):
     )
     collection_interval: Optional[float] = None
     enabled: Optional[bool] = None
+    exclude_databases: Optional[tuple[str, ...]] = None
+    exclude_schemas: Optional[tuple[str, ...]] = None
+    exclude_tables: Optional[tuple[str, ...]] = None
+    include_databases: Optional[tuple[str, ...]] = None
+    include_schemas: Optional[tuple[str, ...]] = None
+    include_tables: Optional[tuple[str, ...]] = None
     max_columns: Optional[float] = None
     max_tables: Optional[float] = None
 
@@ -56,6 +91,19 @@ class CollectSettings(BaseModel):
     )
     collection_interval: Optional[float] = None
     enabled: Optional[bool] = None
+    ignored_settings_patterns: Optional[tuple[str, ...]] = None
+
+
+class CustomQuery(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    collection_interval: Optional[int] = None
+    columns: Optional[tuple[MappingProxyType[str, Any], ...]] = None
+    metric_prefix: Optional[str] = None
+    query: Optional[str] = None
+    tags: Optional[tuple[str, ...]] = None
 
 
 class DatabaseAutodiscovery(BaseModel):
@@ -65,6 +113,7 @@ class DatabaseAutodiscovery(BaseModel):
     )
     enabled: Optional[bool] = None
     exclude: Optional[tuple[str, ...]] = None
+    global_view_db: Optional[str] = None
     include: Optional[tuple[str, ...]] = None
     max_databases: Optional[int] = None
     refresh: Optional[int] = None
@@ -106,8 +155,16 @@ class ObfuscatorOptions(BaseModel):
     collect_comments: Optional[bool] = None
     collect_metadata: Optional[bool] = None
     collect_tables: Optional[bool] = None
+    keep_boolean: Optional[bool] = None
     keep_dollar_quoted_func: Optional[bool] = None
+    keep_identifier_quotation: Optional[bool] = None
+    keep_json_path: Optional[bool] = None
+    keep_null: Optional[bool] = None
+    keep_positional_parameter: Optional[bool] = None
     keep_sql_alias: Optional[bool] = None
+    keep_trailing_semicolon: Optional[bool] = None
+    obfuscation_mode: Optional[str] = None
+    remove_space_between_parentheses: Optional[bool] = None
     replace_digits: Optional[bool] = None
 
 
@@ -126,8 +183,10 @@ class QueryMetrics(BaseModel):
         arbitrary_types_allowed=True,
         frozen=True,
     )
+    baseline_metrics_expiry: Optional[float] = None
     collection_interval: Optional[float] = None
     enabled: Optional[bool] = None
+    incremental_query_metrics: Optional[bool] = None
     pg_stat_statements_max_warning_threshold: Optional[float] = None
 
 
@@ -146,7 +205,7 @@ class QuerySamples(BaseModel):
     seen_samples_cache_maxsize: Optional[int] = None
 
 
-class Relation(BaseModel):
+class Relations(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
         frozen=True,
@@ -170,14 +229,17 @@ class InstanceConfig(BaseModel):
     azure: Optional[Azure] = None
     collect_activity_metrics: Optional[bool] = None
     collect_bloat_metrics: Optional[bool] = None
+    collect_buffercache_metrics: Optional[bool] = None
+    collect_checksum_metrics: Optional[bool] = None
     collect_count_metrics: Optional[bool] = None
     collect_database_size_metrics: Optional[bool] = None
     collect_default_database: Optional[bool] = None
     collect_function_metrics: Optional[bool] = None
+    collect_raw_query_statement: Optional[CollectRawQueryStatement] = None
     collect_schemas: Optional[CollectSchemas] = None
     collect_settings: Optional[CollectSettings] = None
     collect_wal_metrics: Optional[bool] = None
-    custom_queries: Optional[tuple[MappingProxyType[str, Any], ...]] = None
+    custom_queries: Optional[tuple[CustomQuery, ...]] = None
     data_directory: Optional[str] = None
     database_autodiscovery: Optional[DatabaseAutodiscovery] = None
     database_instance_collection_interval: Optional[float] = None
@@ -198,14 +260,16 @@ class InstanceConfig(BaseModel):
     metric_patterns: Optional[MetricPatterns] = None
     min_collection_interval: Optional[float] = None
     obfuscator_options: Optional[ObfuscatorOptions] = None
+    only_custom_queries: Optional[bool] = None
     password: Optional[str] = None
     pg_stat_statements_view: Optional[str] = None
     port: Optional[int] = None
+    propagate_agent_tags: Optional[bool] = None
     query_activity: Optional[QueryActivity] = None
     query_metrics: Optional[QueryMetrics] = None
     query_samples: Optional[QuerySamples] = None
     query_timeout: Optional[int] = None
-    relations: Optional[tuple[Union[str, Relation], ...]] = None
+    relations: Optional[tuple[Union[str, Relations], ...]] = None
     reported_hostname: Optional[str] = None
     service: Optional[str] = None
     ssl: Optional[str] = None
@@ -216,6 +280,7 @@ class InstanceConfig(BaseModel):
     table_count_limit: Optional[int] = None
     tag_replication_role: Optional[bool] = None
     tags: Optional[tuple[str, ...]] = None
+    use_global_custom_queries: Optional[str] = None
     username: str
 
     @model_validator(mode='before')

@@ -2,6 +2,81 @@
 
 <!-- towncrier release notes start -->
 
+## 9.1.0 / 2025-01-16 / Agent 7.63.0
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 9.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+## 8.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 7.13.2 / 2024-05-31 / Agent 7.55.0
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 7.13.1 / 2024-04-26 / Agent 7.54.0
+
+***Fixed***:
+
+* Fixes pod resources requests/limits with exponent notation correctly, e.g. `129e6` for memory is `129M` / `123Mi` ([#17280](https://github.com/DataDog/integrations-core/pull/17280))
+
+## 7.13.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Add logic to skip loading Python check in favor of core check based on config variable `DD_KUBELET_CORE_CHECK_ENABLED` ([#16856](https://github.com/DataDog/integrations-core/pull/16856))
+* Emit kubelet metrics for init containers and pending pods ([#17035](https://github.com/DataDog/integrations-core/pull/17035))
+* Bump the min base check version to 34.2.0 ([#17196](https://github.com/DataDog/integrations-core/pull/17196))
+
+***Fixed***:
+
+* Fix SSL error on kubelet check startup when talking to probes endpoint ([#16987](https://github.com/DataDog/integrations-core/pull/16987))
+
+## 7.12.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+
+## 7.11.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 7.10.1 / 2023-11-14 / Agent 7.50.0
+
+***Fixed***:
+
+* Centralize `get_prometheus_url` function call in the init function and defer log warning after super() call. ([#16192](https://github.com/DataDog/integrations-core/pull/16192))
+
+## 7.10.0 / 2023-11-10
+
+***Added***:
+
+* Added CreateContainerConfigError wait reason ([#16143](https://github.com/DataDog/integrations-core/pull/16143))
+
+***Fixed***:
+
+* Always define logger.
+  Quick fix for https://github.com/DataDog/integrations-core/issues/16179. ([#16187](https://github.com/DataDog/integrations-core/pull/16187))
+
 ## 7.9.2 / 2023-09-29 / Agent 7.49.0
 
 ***Fixed***:

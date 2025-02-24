@@ -15,7 +15,18 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/statsd"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/visualize-statsd-metrics-counts-graphing"
+      }
     ]
   },
   "author": {
@@ -24,7 +35,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "StatsD",
@@ -41,10 +51,9 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
-    },
-    "logs": {
-      "source": "statsd"
+      },
+      "source_type_id": 10086,
+      "auto_install": true
     }
   }
 }

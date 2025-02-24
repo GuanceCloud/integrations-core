@@ -16,7 +16,8 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Airflow",
@@ -45,13 +45,19 @@
       },
       "process_signatures": [
         "airflow"
-      ]
+      ],
+      "source_type_id": 10083,
+      "auto_install": true
     },
     "dashboards": {
       "Airflow Overview": "assets/dashboards/overview.json"
     },
-    "logs": {
-      "source": "airflow"
+    "saved_views": {
+      "airflow_overview": "assets/saved_views/airflow_overview.json"
+    },
+    "monitors": {
+      "Task instances are failing": "assets/monitors/heartbeat_failures.json",
+      "DAG task ongoing duration is high": "assets/monitors/ongoing_duration.json"
     }
   }
 }

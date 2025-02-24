@@ -35,8 +35,11 @@ def test_e2e_profile_f5_big_ip(dd_agent_check):
     common_tags = [
         'snmp_profile:f5-big-ip',
         'snmp_host:f5-big-ip-adc-good-byol-1-vm.c.datadog-integrations-lab.internal',
+        'device_hostname:f5-big-ip-adc-good-byol-1-vm.c.datadog-integrations-lab.internal',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
         'device_vendor:f5',
     ] + []
 
@@ -471,6 +474,8 @@ def test_e2e_profile_f5_big_ip(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.3375.2.1.3.4.43',
         'vendor': 'f5',
         'version': '15.0.1',
+        'device_type': 'load_balancer',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

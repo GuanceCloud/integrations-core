@@ -49,7 +49,7 @@ REPOSITORY_DIR = 'repo'
 REPOSITORY_URL_PREFIX = 'https://dd-integrations-core-wheels-build-stable.datadoghq.com'
 # Where to find our in-toto root layout.
 IN_TOTO_METADATA_DIR = 'in-toto-metadata'
-ROOT_LAYOUTS = {'core': '5.core.root.layout', 'extras': '1.extras.root.layout'}
+ROOT_LAYOUTS = {'core': '6.core.root.layout', 'extras': '1.extras.root.layout'}
 DEFAULT_ROOT_LAYOUT_TYPE = 'core'
 
 
@@ -320,7 +320,7 @@ class TUFDownloader:
     def __get_versions(self, standard_distribution_name):
         index_relpath = 'simple/{}/index.html'.format(standard_distribution_name)
         # https://www.python.org/dev/peps/pep-0491/#escaping-and-unicode
-        wheel_distribution_name = re.sub('[^\\w\\d.]+', '_', standard_distribution_name, re.UNICODE)
+        wheel_distribution_name = re.sub('[^\\w\\d.]+', '_', standard_distribution_name, re.UNICODE)  # noqa: B034
         pattern = "<a href='(" + wheel_distribution_name + "-(.*?)-(.*?)-none-any\\.whl)'>(.*?)</a><br />"
         # version: {python_tag: href}
         wheels = collections.defaultdict(dict)

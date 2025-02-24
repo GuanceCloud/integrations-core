@@ -2,6 +2,109 @@
 
 <!-- towncrier release notes start -->
 
+## 6.2.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Reduced the volume of logging from the `botocore` library ([#19376](https://github.com/DataDog/integrations-core/pull/19376))
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 6.1.0 / 2025-01-16
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 6.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 5.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 4.11.0 / 2024-09-05
+
+***Added***:
+
+* Update dependencies ([#18478](https://github.com/DataDog/integrations-core/pull/18478))
+
+## 4.10.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 4.9.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Update dependencies ([#17817](https://github.com/DataDog/integrations-core/pull/17817)), ([#17953](https://github.com/DataDog/integrations-core/pull/17953))
+
+***Fixed***:
+
+* Update config model names ([#17802](https://github.com/DataDog/integrations-core/pull/17802))
+
+## 4.8.0 / 2024-05-31
+
+***Added***:
+
+* Update dependencies ([#17424](https://github.com/DataDog/integrations-core/pull/17424)), ([#17519](https://github.com/DataDog/integrations-core/pull/17519))
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 4.7.0 / 2024-04-26 / Agent 7.54.0
+
+***Added***:
+
+* Update dependencies ([#17319](https://github.com/DataDog/integrations-core/pull/17319))
+* Upgrade boto dependencies ([#17332](https://github.com/DataDog/integrations-core/pull/17332))
+
+## 4.6.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Update dependencies ([#16899](https://github.com/DataDog/integrations-core/pull/16899)), ([#16963](https://github.com/DataDog/integrations-core/pull/16963))
+
+## 4.5.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+* Bump dependencies ([#16858](https://github.com/DataDog/integrations-core/pull/16858))
+
+## 4.4.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Update dependencies ([#16394](https://github.com/DataDog/integrations-core/pull/16394)), ([#16448](https://github.com/DataDog/integrations-core/pull/16448)), ([#16502](https://github.com/DataDog/integrations-core/pull/16502))
+
+***Fixed***:
+
+* Fix TypeError when tags are undefined ([#16496](https://github.com/DataDog/integrations-core/pull/16496))
+
+## 4.3.0 / 2023-11-10 / Agent 7.50.0
+
+***Added***:
+
+* Updated dependencies. ([#16154](https://github.com/DataDog/integrations-core/pull/16154))
+
 ## 4.2.0 / 2023-09-29 / Agent 7.49.0
 
 ***Added***:

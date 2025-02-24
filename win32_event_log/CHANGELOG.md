@@ -2,6 +2,44 @@
 
 <!-- towncrier release notes start -->
 
+## 5.1.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 5.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 4.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 3.3.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 3.2.0 / 2023-11-10 / Agent 7.50.0
+
+***Deprecated***:
+
+* Deprecate the Python implementation of the check. Setting `legacy_mode: false` now runs a check defined in [datadog-agent](https://github.com/DataDog/datadog-agent). See [datadog-agent#20701](https://github.com/DataDog/datadog-agent/pull/20701) for more information on the new check implementation. Set `legacy_mode_v2: true` to revert to the Python implementation of the check. The Python implementation may be removed in a future version of the agent. ([#16108](https://github.com/DataDog/integrations-core/pull/16108))
+
 ## 3.1.1 / 2023-10-26
 
 ***Fixed***:

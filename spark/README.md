@@ -1,5 +1,10 @@
 # Spark Check
 
+<div class="alert alert-warning">
+<a href="https://docs.datadoghq.com/data_jobs/">Data Jobs Monitoring</a> helps you observe, troubleshoot, and cost-optimize your Spark and Databricks jobs and clusters.<br/><br/>
+This page only documents how to ingest Spark metrics and logs. 
+</div>
+
 ![Spark Graph][1]
 
 ## Overview
@@ -129,6 +134,7 @@ The Spark integration only collects metrics about running apps. If you have no c
 Additional helpful documentation, links, and articles:
 
 - [Hadoop and Spark monitoring with Datadog][15]
+- [Monitoring Apache Spark applications running on Amazon EMR][16]
 
 [1]: https://raw.githubusercontent.com/DataDog/integrations-core/master/spark/images/sparkgraph.png
 [2]: https://spark.apache.org/
@@ -145,3 +151,4 @@ Additional helpful documentation, links, and articles:
 [13]: https://docs.datadoghq.com/agent/
 [14]: https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-connect-master-node-ssh.html
 [15]: https://www.datadoghq.com/blog/monitoring-spark
+[16]: https://www.datadoghq.com/blog/spark-emr-monitoring/ 

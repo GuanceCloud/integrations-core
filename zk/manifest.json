@@ -16,7 +16,8 @@
       "Supported OS::macOS",
       "Category::Orchestration",
       "Category::Notifications",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "ZooKeeper",
@@ -46,16 +46,15 @@
       "process_signatures": [
         "zkServer.sh start",
         "java zoo.cfg"
-      ]
+      ],
+      "source_type_id": 48,
+      "auto_install": true
     },
     "dashboards": {
       "zookeeper": "assets/dashboards/zookeeper_dashboard.json"
     },
     "saved_views": {
       "zookeeper_processes": "assets/saved_views/zookeeper_processes.json"
-    },
-    "logs": {
-      "source": "zookeeper"
     }
   }
 }

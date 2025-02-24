@@ -2,6 +2,105 @@
 
 <!-- towncrier release notes start -->
 
+## 5.4.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Add telemetry for checks that are not scheduled. ([#19306](https://github.com/DataDog/integrations-core/pull/19306))
+
+## 5.3.0 / 2025-01-16
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 5.2.0 / 2024-12-26 / Agent 7.62.0
+
+***Added***:
+
+* add telemetry for local load store in dca ([#19229](https://github.com/DataDog/integrations-core/pull/19229))
+
+## 5.1.0 / 2024-10-31 / Agent 7.60.0
+
+***Added***:
+
+* Add telemetry scraping for Validation AdmissionController ([#18867](https://github.com/DataDog/integrations-core/pull/18867))
+
+## 5.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 4.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 3.2.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Add tagger and workloadmeta metrics ([#18030](https://github.com/DataDog/integrations-core/pull/18030))
+* Add telemetry scraping for Autoscaling ([#18265](https://github.com/DataDog/integrations-core/pull/18265))
+
+## 3.1.1 / 2024-05-31 / Agent 7.55.0
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 3.1.0 / 2024-05-07 / Agent 7.54.0
+
+***Added***:
+
+* [datadog-cluster-agent] Add CWS Instrumentation metrics ([#17530](https://github.com/DataDog/integrations-core/pull/17530))
+
+## 3.0.0 / 2024-03-22 / Agent 7.53.0
+
+***Removed***:
+
+* Removed `admission_webhooks.mutation_errors` metric in the `datadog_cluster_agent` integration ([#17195](https://github.com/DataDog/integrations-core/pull/17195))
+
+## 2.11.1 / 2024-02-29 / Agent 7.52.0
+
+***Fixed***:
+
+* Fix process language detection metrics ([#17001](https://github.com/DataDog/integrations-core/pull/17001))
+
+## 2.11.0 / 2024-02-26
+
+***Added***:
+
+* Collect language detection metrics ([#16928](https://github.com/DataDog/integrations-core/pull/16928))
+
+## 2.10.0 / 2024-02-16
+
+***Added***:
+
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+
+## 2.9.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 2.8.0 / 2023-11-10 / Agent 7.50.0
+
+***Added***:
+
+* Add `datadog.rate_limit_queries.remaining_min` to default metrics of `datadog_cluster_agent` integration ([#16122](https://github.com/DataDog/integrations-core/pull/16122))
+
 ## 2.7.1 / 2023-08-18 / Agent 7.48.0
 
 ***Fixed***:

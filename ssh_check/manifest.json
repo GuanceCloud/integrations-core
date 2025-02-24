@@ -16,7 +16,8 @@
       "Category::Network",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "SSH",
@@ -48,7 +48,9 @@
         "sftp",
         "sshd",
         "sshd:"
-      ]
+      ],
+      "source_type_id": 90,
+      "auto_install": true
     }
   }
 }

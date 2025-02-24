@@ -2,6 +2,108 @@
 
 <!-- towncrier release notes start -->
 
+## 7.3.0 / 2025-02-05 / Agent 7.63.0
+
+***Added***:
+
+* Bump Snowflake dependency to 3.13.1 ([#19545](https://github.com/DataDog/integrations-core/pull/19545))
+
+## 7.2.0 / 2025-01-25
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 7.1.0 / 2024-11-28 / Agent 7.61.0
+
+***Added***:
+
+* Upgrade `snowflake-connector-python` to 3.12.3 ([#19010](https://github.com/DataDog/integrations-core/pull/19010))
+
+## 7.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 6.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 5.9.0 / 2024-09-05
+
+***Added***:
+
+* Update dependencies ([#18478](https://github.com/DataDog/integrations-core/pull/18478))
+
+## 5.8.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 5.7.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Update dependencies ([#17817](https://github.com/DataDog/integrations-core/pull/17817))
+
+## 5.6.0 / 2024-05-31 / Agent 7.55.0
+
+***Added***:
+
+* Update dependencies ([#17424](https://github.com/DataDog/integrations-core/pull/17424)), ([#17519](https://github.com/DataDog/integrations-core/pull/17519))
+
+## 5.5.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Update custom_queries configuration to support optional collection_interval ([#16957](https://github.com/DataDog/integrations-core/pull/16957))
+* Update dependencies ([#16963](https://github.com/DataDog/integrations-core/pull/16963))
+
+***Fixed***:
+
+* Stop reading the private key file and use the `private_key_file` and `private_key_file_pwd` options ([#16926](https://github.com/DataDog/integrations-core/pull/16926))
+* Document the `metric_prefix` option for custom queries ([#17061](https://github.com/DataDog/integrations-core/pull/17061))
+* Update the configuration to include the `metric_prefix` option ([#17065](https://github.com/DataDog/integrations-core/pull/17065))
+
+## 5.4.0 / 2024-03-08 / Agent 7.52.0
+
+***Added***:
+
+* Bump snowflake-connector-python to 3.7.1 ([#17099](https://github.com/DataDog/integrations-core/pull/17099))
+
+## 5.3.0 / 2024-02-16
+
+***Added***:
+
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+
+## 5.2.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Added `schema` and `database` tags to snowpipe metrics. ([#16222](https://github.com/DataDog/integrations-core/pull/16222))
+* Bump the snowflake version to 3.5.0 ([#16324](https://github.com/DataDog/integrations-core/pull/16324))
+* Update dependencies ([#16394](https://github.com/DataDog/integrations-core/pull/16394))
+
+## 5.1.0 / 2023-11-10 / Agent 7.50.0
+
+***Added***:
+
+* Updated dependencies. ([#16154](https://github.com/DataDog/integrations-core/pull/16154))
+
 ## 5.0.1 / 2023-10-18
 
 ***Fixed***:

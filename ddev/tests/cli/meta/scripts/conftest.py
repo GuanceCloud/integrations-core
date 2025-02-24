@@ -5,8 +5,10 @@ import pytest
 
 from ddev.repo.core import Repository
 
-OLD_PYTHON_VERSION = "3.9"
-NEW_PYTHON_VERSION = "3.11"
+# Whenenever we bump python version, we also need to bump the python
+# version in the conftest.py.
+OLD_PYTHON_VERSION = "3.12"
+NEW_PYTHON_VERSION = "3.13"
 
 
 @pytest.fixture
@@ -43,9 +45,16 @@ PYTHON_VERSION = '{OLD_PYTHON_VERSION}'
         f"""[env.collectors.datadog-checks]
 
 [[envs.default.matrix]]
-python = ["2.7", "{OLD_PYTHON_VERSION}"]
+python = ["{OLD_PYTHON_VERSION}"]
 
 """,
+    )
+
+    write_file(
+        repo_path / 'dummy',
+        'metadata.csv',
+        """metric_name,metric_type,interval,unit_name,per_unit_name,description,orientation,integration,short_name,curated_metric
+dummy.metric,gauge,,,,description,0,dummy,,""",
     )
 
     for integration in ('dummy', 'datadog_checks_dependency_provider'):
@@ -61,11 +70,27 @@ python = ["2.7", "{OLD_PYTHON_VERSION}"]
         "License :: OSI Approved :: BSD License",
         "Natural Language :: English",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: {OLD_PYTHON_VERSION}",
     ]
     """,
         )
+
+    write_file(
+        repo_path / 'logs_only',
+        'pyproject.toml',
+        f"""[project]
+    name = "dummy"
+    classifiers = [
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: BSD License",
+        "Natural Language :: English",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: {OLD_PYTHON_VERSION}",
+    ]
+    """,
+    )
 
     write_file(
         repo_path / '.github' / 'workflows',
@@ -109,7 +134,6 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: {OLD_PYTHON_VERSION}",
 ]
 """,

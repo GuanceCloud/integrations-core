@@ -19,10 +19,11 @@ import pytest
 from dateutil import parser
 
 from datadog_checks.base.utils.db.utils import DBMAsyncJob, default_json_event_encoding
+from datadog_checks.dev.ci import running_on_windows_ci
 from datadog_checks.sqlserver import SQLServer
 from datadog_checks.sqlserver.activity import DM_EXEC_REQUESTS_COLS, _hash_to_hex
 
-from .common import CHECK_NAME, OPERATION_TIME_METRIC_NAME
+from .common import CHECK_NAME, OPERATION_TIME_METRIC_NAME, SQLSERVER_MAJOR_VERSION
 from .conftest import DEFAULT_TIMEOUT
 
 try:
@@ -56,25 +57,48 @@ def dbm_instance(instance_docker):
     return copy(instance_docker)
 
 
+@pytest.mark.flaky
 @pytest.mark.integration
 @pytest.mark.usefixtures('dd_environment')
 @pytest.mark.parametrize("use_autocommit", [True, False])
 @pytest.mark.parametrize(
-    "database,query,match_pattern,is_proc,expected_comments",
+    "database,query,match_pattern,is_proc,expected_comments,collect_raw_query_statement,expected_raw_statement",
     [
         [
-            "datadog_test",
+            "datadog_test-1",
             "/*test=foo*/ SELECT * FROM ϑings",
             r"SELECT \* FROM ϑings",
             False,
             ["/*test=foo*/"],
+            False,
+            None,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "EXEC bobProc",
             r"SELECT \* FROM ϑings",
             True,
             [],
+            False,
+            None,
+        ],
+        [
+            "datadog_test-1",
+            "SELECT * FROM ϑings WHERE name = 'test'",
+            r"SELECT \* FROM \[ϑings\] WHERE \[name\]=\@1",
+            False,
+            [],
+            True,
+            "SELECT * FROM ϑings WHERE name = 'test'",
+        ],
+        [
+            "datadog_test-1",
+            "EXEC fredProcParams @Name = 'test'",
+            r"SELECT \* FROM ϑings WHERE name like \@Name",
+            True,
+            [],
+            True,
+            "EXEC fredProcParams @Name = 'test'",
         ],
     ],
 )
@@ -89,15 +113,26 @@ def test_collect_load_activity(
     match_pattern,
     is_proc,
     expected_comments,
+    collect_raw_query_statement,
+    expected_raw_statement,
 ):
-    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+    instance = copy(dbm_instance)
+    instance_tags = set(instance.get('tags', []))
+    expected_instance_tags = {t for t in instance_tags if not t.startswith('dd.internal')}
+    if collect_raw_query_statement:
+        instance["collect_raw_query_statement"] = {"enabled": True}
+        expected_instance_tags.add("raw_query_statement:enabled")
+    check = SQLServer(CHECK_NAME, {}, [instance])
     blocking_query = "INSERT INTO ϑings WITH (TABLOCK, HOLDLOCK) (name) VALUES ('puppy')"
     fred_conn = _get_conn_for_user(instance_docker, "fred", _autocommit=use_autocommit)
     bob_conn = _get_conn_for_user(instance_docker, "bob")
 
     def run_test_query(c, q):
         cur = c.cursor()
-        cur.execute("USE {}".format(database))
+        cur.execute("USE [{}]".format(database))
+        # 0xFF can't be decoded to Unicode, which makes it good test data,
+        # since Unicode is a default format
+        cur.execute("SET CONTEXT_INFO 0xff")
         cur.execute(q)
 
     # run the test query once before the blocking test to ensure that if it's
@@ -133,9 +168,6 @@ def test_collect_load_activity(
     fred_conn.close()
     executor.shutdown(wait=True)
 
-    instance_tags = set(dbm_instance.get('tags', []))
-    expected_instance_tags = {t for t in instance_tags if not t.startswith('dd.internal')}
-
     dbm_activity = aggregator.get_event_platform_events("dbm-activity")
     assert len(dbm_activity) == 1, "should have collected exactly one dbm-activity payload"
     event = dbm_activity[0]
@@ -162,7 +194,8 @@ def test_collect_load_activity(
         assert blocked_row['procedure_signature'], "missing procedure signature"
         assert blocked_row['procedure_name'], "missing procedure name"
     assert re.match(match_pattern, blocked_row['text'], re.IGNORECASE), "incorrect blocked query"
-    assert blocked_row['database_name'] == "datadog_test", "incorrect database_name"
+    assert blocked_row['database_name'] == "datadog_test-1", "incorrect database_name"
+    assert blocked_row['context_info'] == "ff", "incorrect context_info"
     assert blocked_row['id'], "missing session id"
     assert blocked_row['now'], "missing current timestamp"
     assert blocked_row['last_request_start_time'], "missing last_request_start_time"
@@ -171,9 +204,21 @@ def test_collect_load_activity(
     # assert that the current timestamp is being collected as an ISO timestamp with TZ info
     assert parser.isoparse(blocked_row['now']).tzinfo, "current timestamp not formatted correctly"
     assert blocked_row["query_start"], "missing query_start"
+    assert blocked_row["is_user_process"], "missing is_user_process"
     assert parser.isoparse(blocked_row["query_start"]).tzinfo, "query_start timestamp not formatted correctly"
     for r in DM_EXEC_REQUESTS_COLS:
         assert r in blocked_row
+    if collect_raw_query_statement:
+        dbm_samples = aggregator.get_event_platform_events("dbm-samples")
+        rqt_events = [s for s in dbm_samples if s['dbm_type'] == "rqt"]
+        assert rqt_events is not None
+        matched_rqt_event = [s for s in rqt_events if s['db']['statement'] == expected_raw_statement]
+        assert len(matched_rqt_event) == 1
+        assert matched_rqt_event[0]['db']['query_signature'], "missing query_signature"
+        assert matched_rqt_event[0]['db']['raw_query_signature'], "missing raw_query_signature"
+        assert matched_rqt_event[0]['sqlserver']['query_hash'], "missing query_hash"
+        assert blocked_row['raw_query_signature'] == matched_rqt_event[0]['db']['raw_query_signature']
+        assert 'raw_statement' not in blocked_row
 
     # assert connections collection
     assert len(event['sqlserver_connections']) > 0
@@ -192,16 +237,18 @@ def test_collect_load_activity(
     assert b_conn['connections'] >= 1
     assert b_conn['status'] == "sleeping"
     assert f_conn['connections'] >= 1
-    assert f_conn['status'] == "running"
+    assert f_conn['status'] == "running" or f_conn['status'] == "sleeping"
 
     # internal debug metrics
     aggregator.assert_metric(
         OPERATION_TIME_METRIC_NAME,
-        tags=['agent_hostname:stubbed.hostname', 'operation:collect_activity']
-        + _expected_dbm_instance_tags(dbm_instance),
+        tags=['agent_hostname:stubbed.hostname', 'operation:collect_activity'] + _expected_dbm_instance_tags(check),
     )
 
 
+@pytest.mark.flaky
+@pytest.mark.skipif(running_on_windows_ci() and SQLSERVER_MAJOR_VERSION == 2019, reason='Test flakes on this set up')
+@pytest.mark.skipif(running_on_windows_ci(), reason="Test disabled due to failure impacting master pipeline")
 def test_activity_nested_blocking_transactions(
     aggregator,
     instance_docker,
@@ -247,7 +294,7 @@ def test_activity_nested_blocking_transactions(
 
     def run_queries(conn, queries):
         cur = conn.cursor()
-        cur.execute("USE {}".format("datadog_test"))
+        cur.execute("USE [{}]".format("datadog_test-1"))
         cur.execute("BEGIN TRANSACTION")
         for q in queries:
             try:
@@ -299,7 +346,7 @@ def test_activity_nested_blocking_transactions(
     # associated sys.dm_exec_requests.
     assert root_blocker["user_name"] == "fred"
     assert root_blocker["session_status"] == "sleeping"
-    assert root_blocker["database_name"] == "datadog_test"
+    assert root_blocker["database_name"] == "datadog_test-1"
     assert root_blocker["last_request_start_time"]
     assert root_blocker["client_port"]
     assert root_blocker["client_address"]
@@ -321,7 +368,7 @@ def test_activity_nested_blocking_transactions(
     assert tx3["session_status"] == "running"
     # verify other essential fields are present
     assert tx2["user_name"] == "bob"
-    assert tx2["database_name"] == "datadog_test"
+    assert tx2["database_name"] == "datadog_test-1"
     assert tx2["last_request_start_time"]
     assert tx2["client_port"]
     assert tx2["client_address"]
@@ -331,8 +378,9 @@ def test_activity_nested_blocking_transactions(
     assert tx2["query_start"]
     assert tx2["query_hash"]
     assert tx2["query_plan_hash"]
+
     assert tx3["user_name"] == "fred"
-    assert tx3["database_name"] == "datadog_test"
+    assert tx3["database_name"] == "datadog_test-1"
     assert tx3["last_request_start_time"]
     assert tx3["client_port"]
     assert tx3["client_address"]
@@ -383,7 +431,7 @@ def test_activity_metadata(
 
     def _run_test_query(conn, q):
         cur = conn.cursor()
-        cur.execute("USE {}".format("datadog_test"))
+        cur.execute("USE [{}]".format("datadog_test-1"))
         cur.execute(q)
 
     def _obfuscate_sql(sql_query, options=None):
@@ -575,6 +623,128 @@ def test_truncate_on_max_size_bytes(dbm_instance, datadog_agent, rows, expected_
             assert result_rows[index]['user_name'] == user
 
 
+@pytest.mark.unit
+def test_activity_stored_procedure_failed_to_obfuscate(dbm_instance, datadog_agent):
+    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+    with mock.patch.object(datadog_agent, 'obfuscate_sql', passthrough=True) as mock_agent:
+        large_comment = "/* " + "a" * 5000 + " */"
+        statement_text = "SELECT * FROM ϑings"
+        procedure_text = f"CREATE PROCEDURE dbo.sp_test {large_comment} AS BEGIN {statement_text} END;"
+        metadata = {'tables_csv': 'ϑings', 'commands': ['SELECT'], 'comments': [large_comment]}
+        rows = [
+            {
+                "user_name": "newbob",
+                "id": 1,
+                "statement_text": statement_text,
+                "text": procedure_text,
+                "query_start": new_time(),
+            },
+        ]
+        # the first call to obfuscate query text will succeed
+        # the second call to obfuscate procedure text will fail
+        mock_agent.side_effect = [
+            json.dumps({'query': statement_text, 'metadata': metadata}),
+            Exception("failed to obfuscate"),
+        ]
+        result_rows = check.activity._normalize_queries_and_filter_rows(rows, 10000)
+        # procedure text obfuscation will fail but the activity row will still be collected
+        assert len(result_rows) == 1
+        assert result_rows[0]['text'] == statement_text
+        assert result_rows[0]['is_proc'] is True
+        assert result_rows[0]['procedure_signature'] == '__procedure_obfuscation_error__'
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+@pytest.mark.parametrize(
+    "stored_procedure_characters_limit",
+    [
+        500,
+        1000,
+        2000,
+    ],
+)
+def test_activity_stored_procedure_characters_limit(
+    aggregator,
+    instance_docker,
+    dd_run_check,
+    dbm_instance,
+    datadog_agent,
+    stored_procedure_characters_limit,
+):
+    dbm_instance['stored_procedure_characters_limit'] = stored_procedure_characters_limit
+    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+
+    def _obfuscate_sql(sql_query, options=None):
+        if "PROCEDURE procedureWithLargeCommment" in sql_query and len(sql_query) >= stored_procedure_characters_limit:
+            raise Exception("failed to obfuscate")
+        return json.dumps({'query': sql_query, 'metadata': {}})
+
+    blocking_query = "INSERT INTO ϑings WITH (TABLOCK, HOLDLOCK) (name) VALUES ('puppy')"
+    fred_conn = _get_conn_for_user(instance_docker, "fred", _autocommit=True)
+    bob_conn = _get_conn_for_user(instance_docker, "bob")
+
+    def run_test_query(c, q):
+        cur = c.cursor()
+        cur.execute("USE [datadog_test-1]")
+        cur.execute(q)
+
+    run_test_query(fred_conn, "EXEC procedureWithLargeCommment")
+
+    # bob's query blocks until the tx is completed
+    run_test_query(bob_conn, blocking_query)
+
+    # fred's query will get blocked by bob, so it needs
+    # to be run asynchronously
+    executor = concurrent.futures.ThreadPoolExecutor(1)
+    f_q = executor.submit(run_test_query, fred_conn, "EXEC procedureWithLargeCommment")
+    while not f_q.running():
+        if f_q.done():
+            break
+        print("waiting on fred's query to execute")
+        time.sleep(1)
+
+    with mock.patch.object(datadog_agent, 'obfuscate_sql', passthrough=True) as mock_agent:
+        mock_agent.side_effect = _obfuscate_sql
+        dd_run_check(check)
+
+    # commit and close bob's transaction
+    bob_conn.commit()
+    bob_conn.close()
+
+    while not f_q.done():
+        print("blocking query finished, waiting for fred's query to complete")
+        time.sleep(1)
+    # clean up fred's connection
+    # and shutdown executor
+    fred_conn.close()
+    executor.shutdown(wait=True)
+
+    executor = concurrent.futures.ThreadPoolExecutor(1)
+    b_q = executor.submit(run_test_query, bob_conn)
+    while not b_q.running():
+        if b_q.done():
+            break
+        time.sleep(1)
+
+    dbm_activity = aggregator.get_event_platform_events("dbm-activity")
+    assert dbm_activity, "should have collected at least one activity"
+
+    matching_activity = []
+    for event in dbm_activity:
+        for activity in event['sqlserver_activity']:
+            if activity['query_signature'] == "2fa838aee8217d23":
+                matching_activity.append(activity)
+    assert len(matching_activity) == 1
+    assert matching_activity[0]['is_proc'] is True
+    assert matching_activity[0]['procedure_name'].lower() == "procedurewithlargecommment"
+    assert matching_activity[0]['text'] == "SELECT * FROM ϑings"
+    # this is a hacky way of asserting that the procedure signature is present
+    # when stored_procedure_characters_limit is set to a large value
+    if stored_procedure_characters_limit > 500:
+        assert "procedure_signature" in matching_activity[0]
+
+
 @pytest.mark.parametrize(
     "file",
     [
@@ -593,6 +763,7 @@ def test_get_estimated_row_size_bytes(dbm_instance, file):
     assert abs((actual_size - computed_size) / float(actual_size)) <= 0.10
 
 
+@pytest.mark.integration
 def test_activity_collection_rate_limit(aggregator, dd_run_check, dbm_instance):
     # test the activity collection loop rate limit
     collection_interval = 0.1
@@ -615,7 +786,7 @@ def _load_test_activity_json(filename):
 
 def _get_conn_for_user(instance_docker, user, _autocommit=False):
     # Make DB connection
-    conn_str = 'DRIVER={};Server={};Database=master;UID={};PWD={};'.format(
+    conn_str = 'DRIVER={};Server={};Database=master;UID={};PWD={};TrustServerCertificate=yes;'.format(
         instance_docker['driver'], instance_docker['host'], user, "Password12!"
     )
     conn = pyodbc.connect(conn_str, timeout=DEFAULT_TIMEOUT, autocommit=_autocommit)
@@ -623,10 +794,11 @@ def _get_conn_for_user(instance_docker, user, _autocommit=False):
     return conn
 
 
-def _expected_dbm_instance_tags(dbm_instance):
-    return dbm_instance['tags']
+def _expected_dbm_instance_tags(check):
+    return check._config.tags
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("activity_enabled", [True, False])
 def test_async_job_enabled(dd_run_check, dbm_instance, activity_enabled):
     dbm_instance['query_activity'] = {'enabled': activity_enabled, 'run_sync': False}
@@ -662,7 +834,7 @@ def test_async_job_inactive_stop(aggregator, dd_run_check, dbm_instance):
     check.activity._job_loop_future.result()
     aggregator.assert_metric(
         "dd.sqlserver.async_job.inactive_stop",
-        tags=['job:query-activity'] + _expected_dbm_instance_tags(dbm_instance),
+        tags=['job:query-activity'] + _expected_dbm_instance_tags(check),
         hostname='',
     )
 
@@ -681,7 +853,7 @@ def test_async_job_cancel_cancel(aggregator, dd_run_check, dbm_instance):
     # be created in the first place
     aggregator.assert_metric(
         "dd.sqlserver.async_job.cancel",
-        tags=_expected_dbm_instance_tags(dbm_instance) + ['job:query-activity'],
+        tags=_expected_dbm_instance_tags(check) + ['job:query-activity'],
     )
 
 

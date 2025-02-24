@@ -17,7 +17,8 @@
       "Supported OS::Windows",
       "Category::Cloud",
       "Category::Data Stores",
-      "Category::Provisioning"
+      "Category::Provisioning",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -26,7 +27,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Silk",
@@ -43,13 +43,15 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10250,
+      "auto_install": true
     },
     "dashboards": {
       "Silk - Overview": "assets/dashboards/silk_overview.json"
     },
     "monitors": {
-      "Latency high": "assets/monitors/latency_high.json"
+      "Latency is high": "assets/monitors/latency_high.json"
     }
   }
 }

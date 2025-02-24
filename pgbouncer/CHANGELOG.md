@@ -2,6 +2,54 @@
 
 <!-- towncrier release notes start -->
 
+## 8.1.1 / 2025-01-29 / Agent 7.63.0
+
+***Fixed***:
+
+* Revert "Upgrade PGBouncer to psycopg3" due to instability in testing ([#19497](https://github.com/DataDog/integrations-core/pull/19497))
+
+## 8.1.0 / 2025-01-25
+
+***Security***:
+
+* Removed dependency on psycopg2 ([#19325](https://github.com/DataDog/integrations-core/pull/19325))
+
+***Added***:
+
+* Upgrade pgbouncer to psycopg3 ([#19325](https://github.com/DataDog/integrations-core/pull/19325))
+
+## 8.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 7.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 6.2.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 6.1.0 / 2023-11-10 / Agent 7.50.0
+
+***Added***:
+
+* Updated dependencies. ([#16154](https://github.com/DataDog/integrations-core/pull/16154))
+
 ## 6.0.0 / 2023-10-26
 
 ***Changed***:

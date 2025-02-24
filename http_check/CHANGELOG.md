@@ -2,6 +2,95 @@
 
 <!-- towncrier release notes start -->
 
+## 11.1.0 / 2025-01-16 / Agent 7.63.0
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 11.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 10.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+***Security***:
+
+* Bump version of cryptography to 43.0.1 to address vulnerability ([#18656](https://github.com/DataDog/integrations-core/pull/18656))
+
+## 9.9.0 / 2024-09-05
+
+***Added***:
+
+* Update dependencies ([#18478](https://github.com/DataDog/integrations-core/pull/18478))
+
+## 9.8.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 9.7.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Update dependencies ([#17817](https://github.com/DataDog/integrations-core/pull/17817))
+
+## 9.6.0 / 2024-05-31 / Agent 7.55.0
+
+***Added***:
+
+* Update dependencies ([#17519](https://github.com/DataDog/integrations-core/pull/17519))
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 9.5.0 / 2024-03-07 / Agent 7.52.0
+
+***Security***:
+
+* Bump cryptography to 42.0.5 ([#17054](https://github.com/DataDog/integrations-core/pull/17054))
+
+## 9.4.0 / 2024-02-16
+
+***Added***:
+
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+
+## 9.3.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Update dependencies ([#16448](https://github.com/DataDog/integrations-core/pull/16448))
+
+## 9.2.3 / 2023-12-04 / Agent 7.50.0
+
+***Fixed***:
+
+* Bump the cryptography version to 41.0.6 ([#16322](https://github.com/DataDog/integrations-core/pull/16322))
+
+## 9.2.2 / 2023-11-10
+
+***Fixed***:
+
+* Allow using an integer for the expected status code in the config ([#16163](https://github.com/DataDog/integrations-core/pull/16163))
+
 ## 9.2.1 / 2023-10-26 / Agent 7.49.0
 
 ***Fixed***:

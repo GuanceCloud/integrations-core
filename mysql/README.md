@@ -8,6 +8,8 @@ The MySQL integration tracks the performance of your MySQL instances. It collect
 
 Enable [Database Monitoring][32] (DBM) for enhanced insights into query performance and database health. In addition to the standard integration, Datadog DBM provides query-level metrics, live and historical query snapshots, wait event analysis, database load, and query explain plans.
 
+MySQL version 5.6, 5.7, 8.0, and MariaDB versions 10.5, 10.6, 10.11 and 11.1 are supported.
+
 ## Setup
 
 <div class="alert alert-info">This page describes the MySQL Agent standard integration. If you are looking for the Database Monitoring product for MySQL, see <a href="https://docs.datadoghq.com/database_monitoring" target="_blank">Datadog Database Monitoring</a>.</div>
@@ -53,7 +55,7 @@ Query OK, 0 rows affected, 1 warning (0.00 sec)
 For MySQL 8.0 or greater, grant `replication client` and set `max_user_connections` with the following commands:
 
 ```shell
-mysql> GRANT REPLICATION CLIENT ON *.* TO 'datadog'@'%'
+mysql> GRANT REPLICATION CLIENT ON *.* TO 'datadog'@'%';
 Query OK, 0 rows affected (0.00 sec)
 mysql> ALTER USER 'datadog'@'%' WITH MAX_USER_CONNECTIONS 5;
 Query OK, 0 rows affected (0.00 sec)
@@ -89,9 +91,19 @@ mysql> GRANT SELECT ON performance_schema.* TO 'datadog'@'%';
 Query OK, 0 rows affected (0.00 sec)
 ```
 
+To collect index metrics, grant the `datadog` user an additional privilege:
+
+```shell
+
+mysql> GRANT SELECT ON mysql.innodb_index_stats TO 'datadog'@'%';
+Query OK, 0 rows affected (0.00 sec)
+```
+
 ### Configuration
 
 Follow the instructions below to configure this check for an Agent running on a host. For containerized environments, see the [Docker](?tab=docker#docker), [Kubernetes](?tab=kubernetes#kubernetes), or [ECS](?tab=ecs#ecs) sections.
+
+**Note**: For a full list of available configuration options, see the [sample mysql.d/conf.yaml][8].
 
 <!-- xxx tabs xxx -->
 <!-- xxx tab "Host" xxx -->
@@ -100,7 +112,9 @@ Follow the instructions below to configure this check for an Agent running on a 
 
 To configure this check for an Agent running on a host:
 
-Edit the `mysql.d/conf.yaml` file, in the `conf.d/` folder at the root of your [Agent's configuration directory][7] to start collecting your MySQL [metrics](#metric-collection) and [logs](#log-collection). See the [sample mysql.d/conf.yaml][8] for all available configuration options.
+Edit the `mysql.d/conf.yaml` file, in the `conf.d/` folder at the root of your [Agent's configuration directory][7] to start collecting your MySQL [metrics](#metric-collection) and [logs](#log-collection).
+
+For a full list of available configuration options, see the [sample `mysql.d/conf.yaml`][8].
 
 ##### Metric collection
 
@@ -128,8 +142,6 @@ Edit the `mysql.d/conf.yaml` file, in the `conf.d/` folder at the root of your [
 To collect `extra_performance_metrics`, your MySQL server must have `performance_schema` enabled - otherwise set `extra_performance_metrics` to `false`. For more information on `performance_schema`, see [MySQL Performance Schema Quick Start][9].
 
 **Note**: The `datadog` user should be set up in the MySQL integration configuration as `host: 127.0.0.1` instead of `localhost`. Alternatively, you may also use `sock`.
-
-See the [sample mysql.yaml][8] for all available configuration options, including those for custom metrics.
 
 [Restart the Agent][10] to start sending MySQL metrics to Datadog.
 
@@ -473,7 +485,7 @@ The check does not collect all metrics by default. Set the following boolean con
 | mysql.innodb.ibuf_merges                    | RATE        |
 | mysql.innodb.ibuf_segment_size              | GAUGE       |
 | mysql.innodb.ibuf_size                      | GAUGE       |
-| mysql.innodb.lock_structs                   | RATE        |
+| mysql.innodb.lock_structs                   | GAUGE       |
 | mysql.innodb.locked_tables                  | GAUGE       |
 | mysql.innodb.locked_transactions            | GAUGE       |
 | mysql.innodb.log_waits                      | RATE        |
@@ -565,7 +577,7 @@ Additional helpful documentation, links, and articles:
 
 - [Monitoring MySQL performance metrics][31]
 
-[1]: https://raw.githubusercontent.com/DataDog/integrations-core/master/mysql/images/mysql-dash-dd.png
+[1]: https://raw.githubusercontent.com/DataDog/integrations-core/master/mysql/images/mysql-dash-dd-2.png
 [4]: https://app.datadoghq.com/account/settings/agent/latest
 [5]: https://dev.mysql.com/doc/refman/8.0/en/creating-accounts.html
 [6]: https://docs.datadoghq.com/integrations/faq/mysql-localhost-error-localhost-vs-127-0-0-1/

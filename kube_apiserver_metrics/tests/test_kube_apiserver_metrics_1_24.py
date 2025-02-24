@@ -47,6 +47,7 @@ class TestKubeAPIServerMetrics:
         'admission_controller_admission_duration_seconds.count',
         'request_duration_seconds.sum',
         'request_duration_seconds.count',
+        'process_cpu_total',
         'process_resident_memory_bytes',
         'process_virtual_memory_bytes',
         'etcd_request_duration_seconds.sum',
@@ -63,6 +64,7 @@ class TestKubeAPIServerMetrics:
         'storage_list_returned_objects_total',
         'requested_deprecated_apis',
         'apiserver_admission_webhook_fail_open_count',
+        'apiserver_admission_webhook_request_total',
         'admission_webhook_admission_latencies_seconds.sum',
         'admission_webhook_admission_latencies_seconds.count',
         'aggregator_unavailable_apiservice',
@@ -79,6 +81,7 @@ class TestKubeAPIServerMetrics:
         'apiserver_request_total.count',
         'apiserver_request_terminations_total.count',
         'apiserver_admission_webhook_fail_open_count.count',
+        'apiserver_admission_webhook_request_total.count',
     ]
 
     def test_check(self, dd_run_check, aggregator, mock_http_response):

@@ -2,6 +2,58 @@
 
 <!-- towncrier release notes start -->
 
+## 5.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 4.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+* Upgrade psutil to 6.0.0 to fix performance issues addressed ([#18688](https://github.com/DataDog/integrations-core/pull/18688))
+
+## 3.5.0 / 2024-09-05
+
+***Added***:
+
+* Bump `psutil`  version to 5.9.6 ([#18491](https://github.com/DataDog/integrations-core/pull/18491))
+
+## 3.4.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Add `use_oneshot` parameter to speed up check runs with `psutil.Process().oneshot()` ([#17817](https://github.com/DataDog/integrations-core/pull/17817))
+
+## 3.3.0 / 2024-03-08 / Agent 7.52.0
+
+***Added***:
+
+* Revert "Bump psutil version to 5.9.7 (#16547)" ([#17112](https://github.com/DataDog/integrations-core/pull/17112))
+
+## 3.2.0 / 2024-02-16
+
+***Added***:
+
+* Bump `psutil` version to 5.9.7 ([#16547](https://github.com/DataDog/integrations-core/pull/16547))
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+
+## 3.1.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
 ## 3.0.0 / 2023-08-10 / Agent 7.48.0
 
 ***Changed***:

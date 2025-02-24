@@ -3,10 +3,10 @@
 # Licensed under Simplified BSD License (see LICENSE)
 import re
 import time
+from urllib.parse import urlparse
 
 import psycopg2 as pg
 from psycopg2 import extras as pgextras
-from six.moves.urllib.parse import urlparse
 
 from datadog_checks.base import AgentCheck, ConfigurationError, is_affirmative
 from datadog_checks.pgbouncer.metrics import (
@@ -101,7 +101,7 @@ class PgBouncer(AgentCheck):
 
                             tags = list(self.tags)
                             tags += ["%s:%s" % (tag, row[column]) for (column, tag) in descriptors if column in row]
-                            for (column, (name, reporter)) in metrics:
+                            for column, (name, reporter) in metrics:
                                 if column in row:
                                     value = row[column]
                                     if column in ['connect_time', 'request_time']:

@@ -28,8 +28,11 @@ def test_e2e_profile_dell_sonicwall(dd_agent_check):
     common_tags = [
         'snmp_profile:dell-sonicwall',
         'snmp_host:dell-sonicwall.device.name',
+        'device_hostname:dell-sonicwall.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ] + []
 
     # --- TEST EXTENDED METRICS ---
@@ -100,6 +103,8 @@ def test_e2e_profile_dell_sonicwall(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.8741.1',
         'vendor': 'dell',
         'version': '01972WA81B1D',
+        'device_type': 'firewall',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

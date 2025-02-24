@@ -15,7 +15,26 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/hadoop-architecture-overview"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-hadoop-metrics"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/collecting-hadoop-metrics"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-hadoop-metrics-datadog"
+      }
     ]
   },
   "author": {
@@ -24,7 +43,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Yarn",
@@ -45,14 +63,13 @@
       "process_signatures": [
         "java org.apache.hadoop.yarn.server.resourcemanager.ResourceManager",
         "java org.apache.hadoop.yarn.server.nodemanager.NodeManager"
-      ]
+      ],
+      "source_type_id": 134,
+      "auto_install": true
     },
     "dashboards": {
       "yarn": "assets/dashboards/yarn_dashboard.json",
       "hadoop": "assets/dashboards/hadoop_dashboard.json"
-    },
-    "logs": {
-      "source": "yarn"
     }
   }
 }

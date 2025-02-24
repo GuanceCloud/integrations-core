@@ -7,9 +7,10 @@ import json
 import os
 import time
 from concurrent.futures.thread import ThreadPoolExecutor
+from contextlib import closing
 from copy import copy
 from datetime import datetime
-from os import environ
+from threading import Event
 
 import mock
 import pymysql
@@ -21,7 +22,7 @@ from datadog_checks.mysql import MySql
 from datadog_checks.mysql.activity import MySQLActivity
 from datadog_checks.mysql.util import StatementTruncationState
 
-from .common import CHECK_NAME, HOST, MYSQL_VERSION_PARSED, PORT
+from .common import CHECK_NAME, HOST, MYSQL_FLAVOR, MYSQL_VERSION_PARSED, PORT
 
 ACTIVITY_JSON_PLANS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "activity")
 
@@ -55,16 +56,22 @@ def dbm_instance(instance_complex):
     [
         (
             'SELECT id, name FROM testdb.users FOR UPDATE',
-            'aca1be410fbadb61',
+            (
+                '4d09873d44c33af7'
+                if MYSQL_VERSION_PARSED > parse_version('5.7') and MYSQL_FLAVOR != 'mariadb'
+                else 'aca1be410fbadb61'
+            ),
             StatementTruncationState.not_truncated.value,
         ),
         (
             'SELECT id, {} FROM testdb.users FOR UPDATE'.format(
                 ", ".join("name as name{}".format(i) for i in range(254))
             ),
-            '63bd1fd025c7f7fb'
-            if MYSQL_VERSION_PARSED > parse_version('5.6') and environ.get('MYSQL_FLAVOR') != 'mariadb'
-            else '4a12d7afe06cf40',
+            (
+                '4a12d7afe06cf40'
+                if MYSQL_FLAVOR == 'mariadb'
+                else ('da7d6b1e9deb88e' if MYSQL_VERSION_PARSED > parse_version('5.7') else '63bd1fd025c7f7fb')
+            ),
             StatementTruncationState.truncated.value,
         ),
     ],
@@ -105,7 +112,13 @@ def test_activity_collection(aggregator, dbm_instance, dd_run_check, query, quer
     assert activity['dbm_type'] == 'activity'
     assert activity['ddsource'] == 'mysql'
     assert activity['ddagentversion'], "missing agent version"
-    assert set(activity['ddtags']) == {'tag1:value1', 'tag2:value2', 'port:13306'}
+    assert set(activity['ddtags']) == {
+        'database_hostname:stubbed.hostname',
+        'tag1:value1',
+        'tag2:value2',
+        'port:13306',
+        'dbms_flavor:{}'.format(MYSQL_FLAVOR.lower()),
+    }
     assert type(activity['collection_interval']) in (float, int), "invalid collection_interval"
 
     assert activity['mysql_activity'], "should have at least one activity row"
@@ -124,11 +137,8 @@ def test_activity_collection(aggregator, dbm_instance, dd_run_check, query, quer
     # sql text length limits
     expected_sql_text = (
         query[:1021] + '...'
-        if len(query) > 1024
-        and (MYSQL_VERSION_PARSED == parse_version('5.6') or environ.get('MYSQL_FLAVOR') == 'mariadb')
-        else query[:4093] + '...'
-        if len(query) > 4096
-        else query
+        if len(query) > 1024 and (MYSQL_VERSION_PARSED == parse_version('5.6') or MYSQL_FLAVOR == 'mariadb')
+        else query[:4093] + '...' if len(query) > 4096 else query
     )
     assert blocked_row['sql_text'] == expected_sql_text
     assert blocked_row['processlist_state'], "missing state"
@@ -185,7 +195,11 @@ def test_activity_metadata(aggregator, dd_run_check, dbm_instance, datadog_agent
     -- Test comment
     SELECT id, name FROM testdb.users FOR UPDATE
     """
-    query_signature = 'e7f7cb251194df29'
+    query_signature = (
+        '4d09873d44c33af7'
+        if MYSQL_VERSION_PARSED > parse_version('5.7') and MYSQL_FLAVOR != 'mariadb'
+        else 'e7f7cb251194df29'
+    )
 
     def _run_test_query(conn, _query):
         conn.cursor().execute(_query)
@@ -422,14 +436,186 @@ def test_async_job_cancel(aggregator, dd_run_check, dbm_instance):
     )
 
 
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_events_wait_current_disabled(dbm_instance, dd_run_check, root_conn, aggregator):
+    '''
+    This test verifies that the check will not collect any activity if the events_waits_current is disabled.
+    Once the events_waits_current is enabled at runtime, the check should collect activity.
+    '''
+    dbm_instance['options']['extra_performance_metrics'] = False
+    check = MySql(CHECK_NAME, {}, [dbm_instance])
+
+    # disable events_waits_current, expect events_wait_current_enabled to be set to False
+    with closing(root_conn.cursor()) as cursor:
+        cursor.execute("UPDATE performance_schema.setup_consumers SET enabled='NO' WHERE name = 'events_waits_current'")
+
+    dd_run_check(check)
+    # force query activity to run once, expect it to exit immediately with a warning
+    check._query_activity.run_job()
+    dbm_activity = aggregator.get_event_platform_events("dbm-activity")
+    assert check.events_wait_current_enabled is False
+    assert check.warnings == [
+        'Query activity and wait event collection is disabled on this host. To enable it, the setup '
+        'consumer `performance-schema-consumer-events-waits-current` must be enabled on the MySQL server. '
+        'Please refer to the troubleshooting documentation: '
+        'https://docs.datadoghq.com/database_monitoring/setup_mysql/troubleshooting#events-waits-current-not-enabled\n'
+        'code=events-waits-current-not-enabled host=stubbed.hostname',
+    ]
+    assert not dbm_activity, "should not have collected any activity"
+
+    # enable events_waits_current, expect events_wait_current_enabled to be set to True
+    # we should expect no warnings and the query activity to run successfully
+    with closing(root_conn.cursor()) as cursor:
+        cursor.execute(
+            "UPDATE performance_schema.setup_consumers SET enabled='YES' WHERE name = 'events_waits_current'"
+        )
+    assert check.events_wait_current_enabled is not None
+    dd_run_check(check)
+    check.warnings.clear()
+    assert check.events_wait_current_enabled is True
+    check._query_activity.run_job()
+    check.cancel()
+    dbm_activity = aggregator.get_event_platform_events("dbm-activity")
+    assert check.warnings == []
+    assert dbm_activity, "should have collected at least one activity"
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+@pytest.mark.parametrize(
+    "cloud_metadata",
+    [
+        {
+            'azure': {
+                'deployment_type': 'flexible_server',
+                'name': 'my-instance',
+            },
+        },
+    ],
+)
+def test_events_wait_current_disabled_no_warning_azure_flexible_server(
+    dbm_instance, dd_run_check, root_conn, aggregator, cloud_metadata
+):
+    '''
+    This test verifies that the check will not emit a warning
+    if the events_waits_current is disabled and Azure deployment_type is flexible_server.
+    '''
+    if cloud_metadata:
+        for k, v in cloud_metadata.items():
+            dbm_instance[k] = v
+    dbm_instance['options']['extra_performance_metrics'] = False
+    check = MySql(CHECK_NAME, {}, [dbm_instance])
+
+    # disable events_waits_current, expect events_wait_current_enabled to be set to False
+    with closing(root_conn.cursor()) as cursor:
+        cursor.execute("UPDATE performance_schema.setup_consumers SET enabled='NO' WHERE name = 'events_waits_current'")
+
+    dd_run_check(check)
+
+    # force query activity to run once, expect it to collect nothing
+    check._query_activity.run_job()
+    dbm_activity = aggregator.get_event_platform_events("dbm-activity")
+
+    assert check.events_wait_current_enabled is False
+    assert check.warnings == []
+    assert not dbm_activity, "should not have collected any activity"
+
+
 # the inactive job metrics are emitted from the main integrations
 # directly to metrics-intake, so they should also be properly tagged with a resource
 def _expected_dbm_job_err_tags(dbm_instance):
     return dbm_instance['tags'] + [
+        'database_hostname:stubbed.hostname',
         'job:query-activity',
         'port:{}'.format(PORT),
         'dd.internal.resource:database_instance:stubbed.hostname',
+        'dbms_flavor:{}'.format(MYSQL_FLAVOR.lower()),
     ]
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_if_deadlock_metric_is_collected(aggregator, dd_run_check, dbm_instance):
+    check = MySql(CHECK_NAME, {}, [dbm_instance])
+    dd_run_check(check)
+    deadlock_metric = aggregator.metrics("mysql.innodb.deadlocks")
+
+    assert len(deadlock_metric) == 1, "there should be one deadlock metric"
+
+
+@pytest.mark.skipif(
+    MYSQL_FLAVOR == 'mariadb' or MYSQL_VERSION_PARSED < parse_version('8.0'),
+    reason='Deadock count is not updated in MariaDB or older MySQL versions',
+)
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_deadlocks(aggregator, dd_run_check, dbm_instance):
+    check = MySql(CHECK_NAME, {}, [dbm_instance])
+    dd_run_check(check)
+    deadlocks_start = 0
+    deadlock_metric_start = aggregator.metrics("mysql.innodb.deadlocks")
+
+    assert len(deadlock_metric_start) == 1, "there should be one deadlock metric"
+
+    deadlocks_start = deadlock_metric_start[0].value
+
+    first_query = "SELECT * FROM testdb.users WHERE id = 1 FOR UPDATE;"
+    second_query = "SELECT * FROM testdb.users WHERE id = 2 FOR UPDATE;"
+
+    def run_first_deadlock_query(conn, event1, event2):
+        conn.begin()
+        try:
+            conn.cursor().execute("START TRANSACTION;")
+            conn.cursor().execute(first_query)
+            event1.set()
+            event2.wait()
+            conn.cursor().execute(second_query)
+            conn.cursor().execute("COMMIT;")
+        except Exception:
+            # Exception is expected due to a deadlock
+            pass
+        conn.commit()
+
+    def run_second_deadlock_query(conn, event1, event2):
+        conn.begin()
+        try:
+            event1.wait()
+            conn.cursor().execute("START TRANSACTION;")
+            conn.cursor().execute(second_query)
+            event2.set()
+            conn.cursor().execute(first_query)
+            conn.cursor().execute("COMMIT;")
+        except Exception:
+            # Exception is expected due to a deadlock
+            pass
+        conn.commit()
+
+    bob_conn = _get_conn_for_user('bob')
+    fred_conn = _get_conn_for_user('fred')
+
+    executor = concurrent.futures.thread.ThreadPoolExecutor(2)
+
+    event1 = Event()
+    event2 = Event()
+
+    futures_first_query = executor.submit(run_first_deadlock_query, bob_conn, event1, event2)
+    futures_second_query = executor.submit(run_second_deadlock_query, fred_conn, event1, event2)
+    futures_first_query.result()
+    futures_second_query.result()
+    # Make sure innodb is updated.
+    time.sleep(0.3)
+    bob_conn.close()
+    fred_conn.close()
+    executor.shutdown()
+
+    dd_run_check(check)
+
+    deadlock_metric_end = aggregator.metrics("mysql.innodb.deadlocks")
+
+    assert (
+        len(deadlock_metric_end) == 2 and deadlock_metric_end[1].value - deadlocks_start == 1
+    ), "there should be one new deadlock"
 
 
 def _get_conn_for_user(user, _autocommit=False):

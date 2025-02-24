@@ -18,7 +18,14 @@
       "Category::Network",
       "Category::Orchestration",
       "Supported OS::Linux",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/deploy-datadog-dcos"
+      }
     ]
   },
   "author": {
@@ -27,7 +34,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Mesos",
@@ -44,13 +50,12 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 81,
+      "auto_install": true
     },
     "dashboards": {
       "mesos": "assets/dashboards/mesos_overview.json"
-    },
-    "logs": {
-      "source": "mesos"
     }
   }
 }

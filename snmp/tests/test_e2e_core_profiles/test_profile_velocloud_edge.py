@@ -29,8 +29,11 @@ def test_e2e_profile_velocloud_edge(dd_agent_check):
     common_tags = [
         'snmp_profile:velocloud-edge',
         'snmp_host:velocloud-edge.device.name',
+        'device_hostname:velocloud-edge.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ] + []
 
     # --- TEST EXTENDED METRICS ---
@@ -56,6 +59,8 @@ def test_e2e_profile_velocloud_edge(dd_agent_check):
         'status': 1,
         'sys_object_id': '1.3.6.1.4.1.45346.1.1',
         'vendor': 'velocloud',
+        'device_type': 'sd-wan',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

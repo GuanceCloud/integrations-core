@@ -69,10 +69,20 @@ instances:
     #
     # compression: <COMPRESSION>
 
+    ## @param tls_ca_cert - string - optional
+    ## The path to the CA certificate file.
+    #
+    # tls_ca_cert: <TLS_CA_CERT>
+
     ## @param tls_verify - boolean - optional - default: false
     ## Whether or not to connect securely using TLS. The server must also support this.
     #
     # tls_verify: false
+
+    ## @param verify - boolean - optional - default: true
+    ## Indicates if a certificate is required and if it will be validated after a connection is established.
+    #
+    # verify: true
 
     ## @param only_custom_queries - boolean - optional - default: false
     ## Set this parameter to `true` if you want to skip the integration's default metrics collection.
@@ -132,6 +142,14 @@ instances:
     ##              Columns without a name are ignored. To skip a column, enter:
     ##                - {}
     ## 3. tags (optional) - A list of tags to apply to each metric.
+    ## 4. collection_interval (optional) - The frequency at which to collect the metrics.
+    ##     If collection_interval is not set, the query will be run every check run.
+    ##     If the collection interval is less than check collection interval, 
+    ##     the query will be run every check run.
+    ##     If the collection interval is greater than check collection interval, 
+    ##     the query will NOT BE RUN exactly at the collection interval.
+    ##     The query will be run at the next check run after the collection interval has passed.
+    ## 5. metric_prefix (optional) - The prefix to apply to each metric.
     #
     # custom_queries:
     #   - query: SELECT foo, COUNT(*) FROM table.events GROUP BY foo
@@ -142,6 +160,7 @@ instances:
     #       type: gauge
     #     tags:
     #     - test:clickhouse
+    #     metric_prefix: clickhouse
 
     ## @param tags - list of strings - optional
     ## A list of tags to attach to every metric and service check emitted by this instance.

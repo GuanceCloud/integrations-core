@@ -12,6 +12,10 @@ For details of monitored metrics see the [SNMP Data Collected][1] section.
 
 To install and configure the SNMP integration, see the [Network Device Monitoring][2] documentation.
 
+## Vendor profiles
+
+Specific supported vendor profiles for this integration can be found on the [network vendors][6] page.
+
 ## Data Collected
 
 ### Metrics
@@ -29,9 +33,10 @@ Additional helpful documentation, links, and articles:
 * [Monitor SNMP with Datadog][5]
 
 
-[1]: https://docs.datadoghq.com/network_performance_monitoring/devices/data
-[2]: https://docs.datadoghq.com/network_performance_monitoring/devices/setup
+[1]: https://docs.datadoghq.com/network_monitoring/devices/data
+[2]: https://docs.datadoghq.com/network_monitoring/devices/setup
 [3]: https://github.com/DataDog/integrations-core/blob/master/snmp_chatsworth_products/assets/service_checks.json
 [4]: https://docs.datadoghq.com/help/
 [5]: https://www.datadoghq.com/blog/monitor-snmp-with-datadog/
+[6]: https://docs.datadoghq.com/network_monitoring/devices/supported_devices/
 

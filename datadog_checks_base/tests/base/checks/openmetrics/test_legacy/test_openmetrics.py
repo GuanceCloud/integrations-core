@@ -17,7 +17,6 @@ import requests
 from mock import patch
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily, HistogramMetricFamily, SummaryMetricFamily
 from prometheus_client.samples import Sample
-from six import iteritems
 
 from datadog_checks.base import ensure_bytes
 from datadog_checks.checks.openmetrics import OpenMetricsBaseCheck
@@ -30,7 +29,6 @@ TOKENS_PATH = os.path.abspath(os.path.join(get_here(), '..', '..', '..', '..', '
 
 FAKE_ENDPOINT = 'http://fake.endpoint:10055/metrics'
 
-
 PROMETHEUS_CHECK_INSTANCE = {
     'prometheus_url': FAKE_ENDPOINT,
     'metrics': [{'process_virtual_memory_bytes': 'process.vm.bytes'}],
@@ -39,7 +37,6 @@ PROMETHEUS_CHECK_INSTANCE = {
     'send_monotonic_counter': False,
     'health_service_check': True,
 }
-
 
 OPENMETRICS_CHECK_INSTANCE = {
     'prometheus_url': 'http://fake.endpoint:10055/metrics',
@@ -519,7 +516,6 @@ def test_submit_summary(
     count_monotonic_gauge,
     sum_monotonic_gauge,
 ):
-
     # Determine expected metric types for `.count` and `.sum` metrics
     count_type = aggregator.GAUGE
     sum_type = aggregator.GAUGE
@@ -2457,7 +2453,7 @@ def test_label_join_state_change(aggregator, mocked_prometheus_check, mocked_pro
 
     # check that 15 pods are in phase:Running
     assert 15 == len(mocked_prometheus_scraper_config['_label_mapping']['pod'])
-    for _, tags in iteritems(mocked_prometheus_scraper_config['_label_mapping']['pod']):
+    for _, tags in mocked_prometheus_scraper_config['_label_mapping']['pod'].items():
         assert tags.get('phase') == 'Running'
 
     text_data = mock_get.replace(
@@ -2667,14 +2663,12 @@ def test_metadata_transformer(mocked_openmetrics_check_factory, text_data, datad
 
 
 def test_ssl_verify_not_raise_warning(caplog, mocked_openmetrics_check_factory, text_data):
-    instance = dict(
-        {
-            'prometheus_url': 'https://www.example.com',
-            'metrics': [{'foo': 'bar'}],
-            'namespace': 'openmetrics',
-            'ssl_verify': False,
-        }
-    )
+    instance = {
+        'prometheus_url': 'https://www.example.com',
+        'metrics': [{'foo': 'bar'}],
+        'namespace': 'openmetrics',
+        'ssl_verify': False,
+    }
     check = mocked_openmetrics_check_factory(instance)
     scraper_config = check.get_scraper_config(instance)
 
@@ -2689,14 +2683,13 @@ def test_ssl_verify_not_raise_warning(caplog, mocked_openmetrics_check_factory, 
 
 
 def test_send_request_with_dynamic_prometheus_url(caplog, mocked_openmetrics_check_factory, text_data):
-    instance = dict(
-        {
-            'prometheus_url': 'https://www.example.com',
-            'metrics': [{'foo': 'bar'}],
-            'namespace': 'openmetrics',
-            'ssl_verify': False,
-        }
-    )
+    instance = {
+        'prometheus_url': 'https://www.example.com',
+        'metrics': [{'foo': 'bar'}],
+        'namespace': 'openmetrics',
+        'ssl_verify': False,
+    }
+
     check = mocked_openmetrics_check_factory(instance)
     scraper_config = check.get_scraper_config(instance)
 
@@ -2714,14 +2707,12 @@ def test_send_request_with_dynamic_prometheus_url(caplog, mocked_openmetrics_che
 
 
 def test_http_handler(mocked_openmetrics_check_factory):
-    instance = dict(
-        {
-            'prometheus_url': 'https://www.example.com',
-            'metrics': [{'foo': 'bar'}],
-            'namespace': 'openmetrics',
-            'ssl_verify': False,
-        }
-    )
+    instance = {
+        'prometheus_url': 'https://www.example.com',
+        'metrics': [{'foo': 'bar'}],
+        'namespace': 'openmetrics',
+        'ssl_verify': False,
+    }
     check = mocked_openmetrics_check_factory(instance)
     scraper_config = check.get_scraper_config(instance)
 

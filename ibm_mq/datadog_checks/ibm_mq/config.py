@@ -6,7 +6,6 @@ import datetime as dt
 import re
 
 from dateutil.tz import UTC
-from six import PY2, iteritems
 
 from datadog_checks.base import AgentCheck, ConfigurationError, is_affirmative
 from datadog_checks.base.constants import ServiceCheck
@@ -131,7 +130,7 @@ class IBMMQConfig:
 
         # Implicitly enable SSL auth connection if SSL options are used and `ssl_auth` isn't set
         if instance.get('ssl_auth') is None:
-            if any([instance.get(o) for o in ssl_options]):
+            if any(instance.get(o) for o in ssl_options):
                 self.log.info(
                     "`ssl_auth` has not been explicitly enabled but other SSL options have been provided. "
                     "SSL will be used for connecting"
@@ -140,7 +139,7 @@ class IBMMQConfig:
 
         # Explicitly disable SSL auth connection if SSL options are used but `ssl_auth` is False
         if instance.get('ssl_auth') is False:
-            if any([instance.get(o) for o in ssl_options]):
+            if any(instance.get(o) for o in ssl_options):
                 self.log.warning(
                     "`ssl_auth` is explicitly disabled but SSL options are being used. "
                     "SSL will not be used for connecting."
@@ -161,9 +160,6 @@ class IBMMQConfig:
 
         pattern = instance.get('queue_manager_process', init_config.get('queue_manager_process', ''))
         if pattern:
-            if PY2:
-                raise ConfigurationError('The `queue_manager_process` option is only supported on Agent 7')
-
             pattern = pattern.replace('<queue_manager>', re.escape(self.queue_manager_name))
             self.queue_manager_process_pattern = re.compile(pattern)
 
@@ -183,7 +179,7 @@ class IBMMQConfig:
         Compile regex strings from queue_tag_re option and return list of compiled regex/tag pairs
         """
         queue_tag_list = []
-        for regex_str, tags in iteritems(self._queue_tag_re):
+        for regex_str, tags in self._queue_tag_re.items():
             try:
                 queue_tag_list.append([re.compile(regex_str), [t.strip() for t in tags.split(',')]])
             except TypeError:

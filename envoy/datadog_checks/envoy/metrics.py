@@ -1,7 +1,7 @@
 # (C) Datadog, Inc. 2018-present
 # All rights reserved
 # Licensed under a 3-clause BSD style license (see LICENSE)
-from .utils import make_metric_tree
+from .utils import make_metric_tree, modify_metrics_dict
 
 METRIC_PREFIX = 'envoy.'
 
@@ -368,6 +368,31 @@ PROMETHEUS_METRICS_MAP = {
     'envoy_tcp_on_demand_cluster_timeout': 'tcp.on_demand_cluster_timeout',
     'envoy_tcp_upstream_flush': 'tcp.upstream_flush',
     'envoy_tcp_upstream_flush_active': 'tcp.upstream_flush_active',
+    'envoy_http_rbac_allowed': 'http.rbac_allowed',
+    'envoy_http_rbac_denied': 'http.rbac_denied',
+    'envoy_http_rbac_shadow_allowed': 'http.rbac_shadow_allowed',
+    'envoy_http_rbac_shadow_denied': 'http.rbac_shadow_denied',
+    'envoy_http_local_rate_limit_enabled': 'http.local_rate_limit_enabled',
+    'envoy_http_local_rate_limit_enforced': 'http.local_rate_limit_enforced',
+    'envoy_http_local_rate_limit_rate_limited': 'http.local_rate_limit_rate_limited',
+    'envoy_http_local_rate_limit_ok': 'http.local_rate_limit_ok',
+    'envoy_control_plane_connected_state': 'control_plane.connected_state',
+    'envoy_listener_server_ssl_socket_factory_ssl_context_update_by_sds': 'listener.server_ssl_socket_factory.ssl_context_update_by_sds',  # noqa: E501
+    'envoy_listener_server_ssl_socket_factory_upstream_context_secrets_not_ready': 'listener.server_ssl_socket_factory.upstream_context_secrets_not_ready',  # noqa: E501
+    'envoy_listener_server_ssl_socket_factory_downstream_context_secrets_not_ready': 'listener.server_ssl_socket_factory.downstream_context_secrets_not_ready',  # noqa: E501
+    'envoy_cluster_client_ssl_socket_factory_ssl_context_update_by_sds': 'cluster.client_ssl_socket_factory.ssl_context_update_by_sds',  # noqa: E501
+    'envoy_cluster_client_ssl_socket_factory_upstream_context_secrets_not_ready': 'cluster.client_ssl_socket_factory.upstream_context_secrets_not_ready',  # noqa: E501
+    'envoy_cluster_client_ssl_socket_factory_downstream_context_secrets_not_ready': 'cluster.client_ssl_socket_factory.downstream_context_secrets_not_ready',  # noqa: E501
+    'envoy_connection_limit_active_connections': 'connection_limit.active_connections',
+    'envoy_connection_limit_limited_connections': 'connection_limit.limited_connections',
+    'envoy_tls_inspector_client_hello_too_large': 'tls_inspector.client_hello_too_large',
+    'envoy_tls_inspector_tls_found': 'tls_inspector.tls.found',
+    'envoy_tls_inspector_tls_not_found': 'tls_inspector.tls.not_found',
+    'envoy_tls_inspector_alpn_found': 'tls_inspector.alpn.found',
+    'envoy_tls_inspector_alpn_not_found': 'tls_inspector.alpn.not_found',
+    'envoy_tls_inspector_sni_found': 'tls_inspector.sni.found',
+    'envoy_tls_inspector_sni_not_found': 'tls_inspector.sni.not_found',
+    'envoy_tls_inspector_bytes_processed': 'tls_inspector.bytes_processed',
 }
 
 # fmt: off
@@ -3853,7 +3878,99 @@ METRICS = {
         ),
         'method': 'monotonic_count',
     },
+    'http.rbac.allowed': {
+        'tags': (
+            ('stat_prefix',),
+            ('rule_prefix',),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    'http.rbac.denied': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    'http.rbac.shadow_allowed': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    'http.rbac.shadow_denied': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    # "*." to match at the beginning of raw metric if it doesn't have a standard name
+    '*.http_local_rate_limit.enabled': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    '*.http_local_rate_limit.enforced': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    '*.http_local_rate_limit.rate_limited': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    '*.http_local_rate_limit.ok': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
+    'connection_limit.active_connections': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+        ),
+        'method': 'gauge',
+    },
+    'connection_limit.limited_connections': {
+        'tags': (
+            ('stat_prefix',),
+            (),
+        ),
+        'method': 'monotonic_count',
+    },
 }
 # fmt: on
 
+
+LEGACY_TAG_OVERWRITE = {
+    # The legacy approach gave very little ability for modifications to be done to tags.
+    # This dict allows us to fine tune and replace tags as needed.
+    'http.rbac.shadow_denied': {
+        'rule_prefix': 'shadow_rule_prefix',
+    },
+    'http.rbac.shadow_allowed': {
+        'rule_prefix': 'shadow_rule_prefix',
+    },
+}
+
+MOD_METRICS = modify_metrics_dict(METRICS)
 METRIC_TREE = make_metric_tree(METRICS)

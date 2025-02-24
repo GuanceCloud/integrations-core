@@ -26,11 +26,14 @@ from datadog_checks.sqlserver.const import (
     ENGINE_EDITION_ENTERPRISE,
     ENGINE_EDITION_EXPRESS,
     ENGINE_EDITION_PERSONAL,
+    ENGINE_EDITION_SQL_DATABASE,
     ENGINE_EDITION_STANDARD,
+    STATIC_INFO_ENGINE_EDITION,
 )
 from datadog_checks.sqlserver.statements import SQL_SERVER_QUERY_METRICS_COLUMNS, obfuscate_xml_plan
 
 from .common import CHECK_NAME, OPERATION_TIME_METRIC_NAME
+from .utils import CLOSE_TO_ZERO_INTERVAL
 
 try:
     import pyodbc
@@ -59,11 +62,13 @@ def dbm_instance(instance_docker):
     instance_docker['procedure_metrics'] = {'enabled': False}
     instance_docker['collect_settings'] = {'enabled': False}
     instance_docker['query_activity'] = {'enabled': False}
-    # set a very small collection interval so the tests go fast
+    # Set collection_interval close to 0. This is needed if the test runs the check multiple times.
+    # This prevents DBMAsync from skipping job executions, as it is designed
+    # to not execute jobs more frequently than their collection period.
     instance_docker['query_metrics'] = {
         'enabled': True,
         'run_sync': True,
-        'collection_interval': 0.1,
+        'collection_interval': CLOSE_TO_ZERO_INTERVAL,
         # in tests sometimes things can slow down so we don't want this short deadline causing some events
         # to fail to be collected on time
         'enforce_collection_interval_deadline': False,
@@ -118,7 +123,7 @@ def test_get_statement_metrics_query_cached(aggregator, dbm_instance, caplog):
 
 
 test_statement_metrics_and_plans_parameterized = (
-    "database,query,expected_queries_patterns,param_groups,exe_count,is_encrypted,is_proc,disable_secondary_tags",
+    "database,query,expected_queries_patterns,param_groups,exe_count,is_encrypted,is_proc,disable_secondary_tags,collect_raw_query_statement",
     [
         [
             "master",
@@ -132,6 +137,7 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             True,
             True,
+            False,
         ],
         [
             "master",
@@ -145,6 +151,7 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             True,
             True,
+            False,
         ],
         [
             "master",
@@ -155,9 +162,10 @@ test_statement_metrics_and_plans_parameterized = (
             True,
             True,
             True,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "SELECT * FROM ϑings",
             [r"SELECT \* FROM ϑings"],
             ((),),
@@ -165,9 +173,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             False,
             False,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "SELECT * FROM ϑings where id = ?",
             [r"SELECT \* FROM ϑings where id = @P1"],
             (
@@ -179,9 +188,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             False,
             False,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "EXEC bobProc",
             [r"SELECT \* FROM ϑings"],
             ((),),
@@ -189,9 +199,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             True,
             True,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "EXEC bobProc",
             [r"SELECT \* FROM ϑings"],
             ((),),
@@ -199,11 +210,12 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             True,
             True,
+            False,
         ],
         [
             "master",
-            "SELECT * FROM datadog_test.dbo.ϑings where id = ?",
-            [r"SELECT \* FROM datadog_test.dbo.ϑings where id = @P1"],
+            "SELECT * FROM [datadog_test-1].dbo.ϑings where id = ?",
+            [r"SELECT \* FROM \[datadog_test-1\].dbo.ϑings where id = @P1"],
             (
                 (1,),
                 (2,),
@@ -213,9 +225,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             False,
             False,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "SELECT * FROM ϑings where id = ? and name = ?",
             [r"SELECT \* FROM ϑings where id = @P1 and name = @P2"],
             (
@@ -227,9 +240,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             False,
             False,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "SELECT * FROM ϑings where id = ?",
             [r"SELECT \* FROM ϑings where id = @P1"],
             (
@@ -241,9 +255,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             False,
             True,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "EXEC bobProcParams @P1 = ?, @P2 = ?",
             [
                 r"SELECT \* FROM ϑings WHERE id = @P1",
@@ -257,9 +272,10 @@ test_statement_metrics_and_plans_parameterized = (
             False,
             True,
             True,
+            False,
         ],
         [
-            "datadog_test",
+            "datadog_test-1",
             "EXEC bobProcParams @P1 = ?, @P2 = ?",
             [
                 r"SELECT \* FROM ϑings WHERE id = @P1",
@@ -271,6 +287,24 @@ test_statement_metrics_and_plans_parameterized = (
             ),
             5,
             False,
+            True,
+            True,
+            False,
+        ],
+        [
+            "datadog_test-1",
+            "EXEC bobProcParams @P1 = ?, @P2 = ?",
+            [
+                r"SELECT \* FROM ϑings WHERE id = @P1",
+                r"SELECT id FROM ϑings WHERE name = @P2",
+            ],
+            (
+                (1, "foo"),
+                (2, "bar"),
+            ),
+            5,
+            False,
+            True,
             True,
             True,
         ],
@@ -294,6 +328,7 @@ def test_statement_metrics_and_plans(
     is_proc,
     disable_secondary_tags,
     expected_queries_patterns,
+    collect_raw_query_statement,
     caplog,
     datadog_agent,
 ):
@@ -301,6 +336,12 @@ def test_statement_metrics_and_plans(
     if disable_secondary_tags:
         dbm_instance['query_metrics']['disable_secondary_tags'] = True
     dbm_instance['query_activity'] = {'enabled': True, 'collection_interval': 2}
+    instance_tags = dbm_instance.get('tags', [])
+    expected_instance_tags = {t for t in instance_tags if not t.startswith('dd.internal')}
+    if collect_raw_query_statement:
+        dbm_instance["collect_raw_query_statement"] = {"enabled": True}
+        expected_instance_tags.add("raw_query_statement:enabled")
+    expected_instance_tags_with_db = expected_instance_tags | {"db:{}".format(database)}
     check = SQLServer(CHECK_NAME, {}, [dbm_instance])
 
     # the check must be run three times:
@@ -325,10 +366,6 @@ def test_statement_metrics_and_plans(
             available_query_metrics_columns = check.statement_metrics._get_available_query_metrics_columns(
                 cursor, SQL_SERVER_QUERY_METRICS_COLUMNS
             )
-
-    instance_tags = dbm_instance.get('tags', [])
-    expected_instance_tags = {t for t in instance_tags if not t.startswith('dd.internal')}
-    expected_instance_tags_with_db = expected_instance_tags | {"db:{}".format(database)}
 
     # dbm-metrics
     dbm_metrics = aggregator.get_event_platform_events("dbm-metrics")
@@ -425,6 +462,27 @@ def test_statement_metrics_and_plans(
             assert not event['sqlserver']['is_plan_encrypted']
             assert not event['sqlserver']['is_statement_encrypted']
 
+    if collect_raw_query_statement:
+        raw_plan_events = [s for s in matching_samples if s['dbm_type'] == "rqp"]
+        # raw plan events should be one to one with the plan events
+        assert len(raw_plan_events) == 1, "should have collected exactly one raw plan event"
+        for event in plan_events:
+            if is_encrypted:
+                assert not event['db']['plan']['definition']
+                assert event['sqlserver']['is_plan_encrypted']
+                assert event['sqlserver']['is_statement_encrypted']
+            elif is_proc:
+                assert event['db']['procedure_signature'], "missing proc signature"
+                assert event['db']['procedure_name'], "missing proc name"
+                assert not event['db']['query_signature'], "procedure plans should not have query_signature field set"
+            else:
+                assert event['db']['plan']['definition'], "event plan definition missing"
+                assert event['db']['plan']['raw_signature'], "event plan raw signature missing"
+                parsed_plan = ET.fromstring(event['db']['plan']['definition'])
+                assert parsed_plan.tag.endswith("ShowPlanXML"), "plan does not match expected structure"
+                assert not event['sqlserver']['is_plan_encrypted']
+                assert not event['sqlserver']['is_statement_encrypted']
+
     fqt_events = [s for s in matching_samples if s['dbm_type'] == "fqt"]
     assert len(fqt_events) == len(
         expected_queries_patterns
@@ -434,7 +492,7 @@ def test_statement_metrics_and_plans(
     aggregator.assert_metric(
         OPERATION_TIME_METRIC_NAME,
         tags=['agent_hostname:stubbed.hostname', 'operation:collect_statement_metrics_and_plans']
-        + _expected_dbm_instance_tags(dbm_instance),
+        + _expected_dbm_instance_tags(check),
     )
 
 
@@ -490,12 +548,12 @@ def test_statement_metrics_limit(
     "metadata,expected_metadata_payload",
     [
         (
-            {'tables_csv': 'sys.databases', 'commands': ['SELECT'], 'comments': ['-- Test comment']},
-            {'tables': ['sys.databases'], 'commands': ['SELECT'], 'comments': ['-- Test comment']},
+            {'tables_csv': 'sys.databases', 'commands': ['SELECT']},
+            {'tables': ['sys.databases'], 'commands': ['SELECT']},
         ),
         (
-            {'tables_csv': '', 'commands': None, 'comments': None},
-            {'tables': None, 'commands': None, 'comments': None},
+            {'tables_csv': '', 'commands': None},
+            {'tables': None, 'commands': None},
         ),
     ],
 )
@@ -504,9 +562,7 @@ def test_statement_metadata(
 ):
     check = SQLServer(CHECK_NAME, {}, [dbm_instance])
 
-    query = '''
-    -- Test comment
-    select * from sys.sysusers'''
+    query = "select * from sys.databases /* service='datadog-agent' */"
     query_signature = '6d1d070f9b6c5647'
 
     def _run_query():
@@ -531,7 +587,7 @@ def test_statement_metadata(
     sample = matching[0]
     assert sample['db']['metadata']['tables'] == expected_metadata_payload['tables']
     assert sample['db']['metadata']['commands'] == expected_metadata_payload['commands']
-    assert sample['db']['metadata']['comments'] == expected_metadata_payload['comments']
+    assert sample['db']['metadata']['comments'] == ["/* service='datadog-agent' */"]
 
     fqt_samples = [
         s for s in dbm_samples if s.get('dbm_type') == 'fqt' and s['db']['query_signature'] == query_signature
@@ -540,6 +596,7 @@ def test_statement_metadata(
     fqt = fqt_samples[0]
     assert fqt['db']['metadata']['tables'] == expected_metadata_payload['tables']
     assert fqt['db']['metadata']['commands'] == expected_metadata_payload['commands']
+    assert fqt['db']['metadata']['comments'] == ["/* service='datadog-agent' */"]
 
     dbm_metrics = aggregator.get_event_platform_events("dbm-metrics")
     assert len(dbm_metrics) == 1
@@ -568,6 +625,7 @@ def test_statement_metadata(
                 'azure': {
                     'deployment_type': 'managed_instance',
                     'name': 'my-instance.abcea3661b20.database.windows.net',
+                    'aggregate_sql_databases': False,
                 },
             },
         ),
@@ -582,6 +640,7 @@ def test_statement_metadata(
                 'azure': {
                     'deployment_type': 'managed_instance',
                     'name': 'my-instance.abcea3661b20.database.windows.net',
+                    'aggregate_sql_databases': False,
                 },
             },
         ),
@@ -602,6 +661,7 @@ def test_statement_metadata(
                 'azure': {
                     'deployment_type': 'managed_instance',
                     'name': 'my-instance.abcea3661b20.database.windows.net',
+                    'aggregate_sql_databases': False,
                 },
             },
         ),
@@ -634,7 +694,7 @@ def test_statement_cloud_metadata(
     query = 'SELECT * FROM ϑings'
 
     def _run_query():
-        bob_conn.execute_with_retries(query, (), database="datadog_test")
+        bob_conn.execute_with_retries(query, (), database="datadog_test-1")
 
     # the check must be run three times:
     # 1) set _last_stats_query_time (this needs to happen before the 1st test queries to ensure the query time
@@ -727,8 +787,8 @@ def test_statement_basic_metrics_query(datadog_conn_docker, dbm_instance):
         columns = [i[0] for i in cursor.description]
         # construct row dicts manually as there's no DictCursor for pyodbc
         rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
-        matching = [r for r in rows if r['text'] == test_query]
-        assert matching, "the test query should be visible in the query stats"
+        matching = [r for r in rows if r['statement_text'] == test_query]
+        assert matching, "the test query should be visible in the query stats, found all rows: {}".format(rows)
         row = matching[0]
 
         cursor.execute(
@@ -764,7 +824,7 @@ def test_plan_collection_deadline(aggregator, dd_run_check, dbm_instance, slow_p
         mock_obj.side_effect = _mock_slow_load_plan
         dd_run_check(check)
 
-    expected_debug_tags = ['agent_hostname:stubbed.hostname'] + _expected_dbm_instance_tags(dbm_instance)
+    expected_debug_tags = ['agent_hostname:stubbed.hostname'] + _expected_dbm_instance_tags(check)
 
     if slow_plans:
         aggregator.assert_metric("dd.sqlserver.statements.deadline_exceeded", tags=expected_debug_tags)
@@ -813,8 +873,8 @@ def test_obfuscate_xml_plan(test_file, obfuscated_file, datadog_agent):
 PORT = 1432
 
 
-def _expected_dbm_instance_tags(dbm_instance):
-    return dbm_instance['tags']
+def _expected_dbm_instance_tags(check):
+    return check._config.tags
 
 
 @pytest.mark.parametrize("statement_metrics_enabled", [True, False])
@@ -839,7 +899,7 @@ def test_async_job_inactive_stop(aggregator, dd_run_check, dbm_instance):
     check.statement_metrics._job_loop_future.result()
     aggregator.assert_metric(
         "dd.sqlserver.async_job.inactive_stop",
-        tags=['job:query-metrics'] + _expected_dbm_instance_tags(dbm_instance),
+        tags=['job:query-metrics'] + _expected_dbm_instance_tags(check),
         hostname='',
     )
 
@@ -858,7 +918,7 @@ def test_async_job_cancel_cancel(aggregator, dd_run_check, dbm_instance):
     # be created in the first place
     aggregator.assert_metric(
         "dd.sqlserver.async_job.cancel",
-        tags=_expected_dbm_instance_tags(dbm_instance) + ['job:query-metrics'],
+        tags=_expected_dbm_instance_tags(check) + ['job:query-metrics'],
     )
 
 
@@ -911,6 +971,85 @@ def test_statement_conditional_stored_procedure_with_temp_table(
         assert event['sqlserver']['query_plan_hash'] is not None
 
 
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+@pytest.mark.parametrize(
+    "stored_procedure_characters_limit",
+    [
+        500,
+        1000,
+        2000,
+    ],
+)
+def test_statement_stored_procedure_characters_limit(
+    aggregator, datadog_agent, dd_run_check, dbm_instance, bob_conn, stored_procedure_characters_limit
+):
+    dbm_instance['stored_procedure_characters_limit'] = stored_procedure_characters_limit
+    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+    query = "EXEC procedureWithLargeCommment;"
+
+    def _obfuscate_sql(sql_query, options=None):
+        if "PROCEDURE procedureWithLargeCommment" in sql_query and len(sql_query) >= stored_procedure_characters_limit:
+            raise Exception('failed to obfuscate')
+        return json.dumps({'query': sql_query, 'metadata': {}})
+
+    # Execute the query with the mocked obfuscate_sql. The result should produce an event payload with the metadata.
+    with mock.patch.object(datadog_agent, 'obfuscate_sql', passthrough=True) as mock_agent:
+        mock_agent.side_effect = _obfuscate_sql
+        dd_run_check(check)
+        bob_conn.execute_with_retries(query, (), database="datadog_test-1")
+        dd_run_check(check)
+        aggregator.reset()
+        bob_conn.execute_with_retries(query, (), database="datadog_test-1")
+        dd_run_check(check)
+
+    # dbm-metrics
+    dbm_metrics = aggregator.get_event_platform_events("dbm-metrics")
+    assert len(dbm_metrics) == 1, "should have collected exactly one dbm-metrics payload"
+    payload = dbm_metrics[0]
+    # metrics rows
+    sqlserver_rows = payload.get('sqlserver_rows', [])
+    assert sqlserver_rows, "should have collected some sqlserver query metrics rows"
+
+    matched_rows = [s for s in sqlserver_rows if s.get("procedure_name") == "procedurewithlargecommment"]
+    if stored_procedure_characters_limit > 500:
+        assert matched_rows, "should have collected the metric row with expected procedure name"
+        assert "procedure_signature" in matched_rows[0]
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_statement_with_embedded_characters(aggregator, datadog_agent, dd_run_check, dbm_instance, bob_conn):
+    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+    query = "EXEC nullCharTest;"
+
+    def _obfuscate_sql(sql_query, options=None):
+        return json.dumps({'query': sql_query, 'metadata': {}})
+
+    # Execute the query with the mocked obfuscate_sql. The result should produce an event payload with the metadata.
+    with mock.patch.object(datadog_agent, 'obfuscate_sql', passthrough=True) as mock_agent:
+        mock_agent.side_effect = _obfuscate_sql
+        dd_run_check(check)
+        bob_conn.execute_with_retries(query, (), database="datadog_test-1")
+        dd_run_check(check)
+        aggregator.reset()
+        bob_conn.execute_with_retries(query, (), database="datadog_test-1")
+        dd_run_check(check)
+
+    # dbm-metrics
+    dbm_metrics = aggregator.get_event_platform_events("dbm-metrics")
+    assert len(dbm_metrics) == 1, "should have collected exactly one dbm-metrics payload"
+    payload = dbm_metrics[0]
+    # metrics rows
+    sqlserver_rows = payload.get('sqlserver_rows', [])
+    assert sqlserver_rows, "should have collected some sqlserver query metrics rows"
+
+    matched_rows = [s for s in sqlserver_rows if s.get("procedure_name") == "nullchartest"]
+    assert matched_rows, "should have collected the metric row with expected procedure name"
+    assert "text" in matched_rows[0]
+    assert "\x00" not in matched_rows[0]["text"]
+
+
 def _mock_database_list():
     Row = namedtuple('Row', 'name')
     fetchall_results = [
@@ -936,3 +1075,75 @@ def test_metrics_lookback_multiplier(instance_docker):
 
     check.statement_metrics._load_raw_query_metrics_rows(mock_cursor)
     mock_cursor.execute.assert_called_with(ANY, (6,))
+
+
+@pytest.mark.unit
+def test_metrics_lookback_window_config(instance_docker):
+    instance_docker['query_metrics'] = {'lookback_window': 86400}
+    check = SQLServer(CHECK_NAME, {}, [instance_docker])
+    _, mock_cursor = _mock_database_list()
+
+    check.statement_metrics._load_raw_query_metrics_rows(mock_cursor)
+    mock_cursor.execute.assert_called_with(ANY, (86400,))
+
+
+@pytest.mark.flaky
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+@pytest.mark.parametrize(
+    "configured_database,engine_edition,filter_to_configured_database",
+    [
+        pytest.param(None, None, False, id="no_database_configured_not_azure_sql"),  # should default to master
+        pytest.param(
+            "datadog_test-1", None, False, id="configured_database_datadog_test-1_not_azure_sql"
+        ),  # should not filter to configured database datadog_test-1
+        pytest.param(
+            "master", None, False, id="configured_database_master_not_azure_sql"
+        ),  # should use configured database master
+        pytest.param(
+            "datadog_test-1", ENGINE_EDITION_SQL_DATABASE, True, id="configured_database_datadog_test-1_azure_sql"
+        ),  # should filter to configured database datadog_test-1
+    ],
+)
+def test_statement_with_metrics_azure_sql_filtered_to_configured_database(
+    aggregator,
+    dd_run_check,
+    dbm_instance,
+    bob_conn,
+    configured_database,
+    engine_edition,
+    filter_to_configured_database,
+):
+    if configured_database:
+        dbm_instance['database'] = configured_database
+    check = SQLServer(CHECK_NAME, {}, [dbm_instance])
+
+    if engine_edition:
+        check.static_info_cache[STATIC_INFO_ENGINE_EDITION] = engine_edition
+
+    def _execute_queries():
+        bob_conn.execute_with_retries("SELECT * FROM ϑings", (), database="datadog_test-1")
+        bob_conn.execute_with_retries("SELECT count(*) from sys.databases", (), database="master")
+
+    dd_run_check(check)
+    _execute_queries()
+    dd_run_check(check)
+    aggregator.reset()
+    _execute_queries()
+    dd_run_check(check)
+
+    # dbm-metrics
+    dbm_metrics = aggregator.get_event_platform_events("dbm-metrics")
+    assert len(dbm_metrics) == 1, "should have collected exactly one dbm-metrics payload"
+    payload = dbm_metrics[0]
+    # metrics rows
+    sqlserver_rows = payload.get('sqlserver_rows', [])
+    assert sqlserver_rows, "should have collected some sqlserver query metrics rows"
+    if filter_to_configured_database:
+        assert all(
+            row['database_name'] == configured_database for row in sqlserver_rows
+        ), "should have only collected metrics for configured database"
+    else:
+        database_names = {row['database_name'] for row in sqlserver_rows}
+        assert 'datadog_test-1' in database_names, "should have collected metrics for datadog_test-1 databases"
+        assert 'master' in database_names, "should have collected metrics for master databases"

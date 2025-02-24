@@ -17,7 +17,26 @@
       "Category::Network",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Category::Provisioning",
+      "Category::Configuration & Deployment",
+      "Submitted Data Type::Metrics",
+      "Submitted Data Type::Logs",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/openstack-monitoring-nova"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/install-openstack-in-two-commands"
+      },
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/openstack-host-aggregates-flavors-availability-zones"
+      }
     ]
   },
   "author": {
@@ -26,7 +45,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "OpenStack",
@@ -46,16 +64,15 @@
       },
       "process_signatures": [
         "stack.sh"
-      ]
+      ],
+      "source_type_id": 125,
+      "auto_install": true
     },
     "dashboards": {
       "openstack": "assets/dashboards/openstack_dashboard.json"
     },
     "saved_views": {
       "openstack_processes": "assets/saved_views/openstack_processes.json"
-    },
-    "logs": {
-      "source": "openstack"
     }
   }
 }

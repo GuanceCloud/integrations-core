@@ -16,7 +16,10 @@
       "Supported OS::Windows",
       "Supported OS::macOS",
       "Category::AI/ML",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Submitted Data Type::Metrics",
+      "Submitted Data Type::Logs",
+      "Offering::Integration"
     ]
   },
   "assets": {
@@ -37,13 +40,21 @@
         "metadata_path": "assets/service_checks.json"
       },
       "process_signatures": [
-        "python -m ray.util.client.server",
+        "ray.util.client.server",
         "gcs_server",
         "raylet"
-      ]
+      ],
+      "source_type_id": 10393,
+      "auto_install": true
     },
-    "logs": {
-      "source": "ray"
+    "monitors": {
+      "High CPU Utilization on Ray.io node": "assets/monitors/cpu_utilization.json",
+      "Low GPU Utilization low on Ray.io Node": "assets/monitors/gpu_utilization.json",
+      "High Memory Usage": "assets/monitors/mem_utilization.json",
+      "High Number of Failed Tasks on Ray.io Node": "assets/monitors/failed_task.json"
+    },
+    "dashboards": {
+      "Ray Overview Dashboard": "assets/dashboards/overview_dashboard.json"
     }
   },
   "author": {
@@ -51,6 +62,5 @@
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

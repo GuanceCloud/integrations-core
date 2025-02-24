@@ -4,13 +4,12 @@
 
 ## Overview
 
-This Agent check only collects metrics for message offsets. If you want to collect JMX metrics from the Kafka brokers or Java-based consumers/producers, see the kafka check.
+This Agent integration collects message offset metrics from your Kafka consumers. This check fetches the highwater offsets from the Kafka brokers, consumer offsets that are stored in Kafka (or Zookeeper for old-style consumers), and then calculates consumer lag (which is the difference between the broker offset and the consumer offset).
 
-If you would benefit from visualizing the topology of your streaming data pipelines, or from investigating localized bottlenecks within your data streams setup, check out [Data Streams Monitoring][16].
+**Note:** 
+- This integration ensures that consumer offsets are checked before broker offsets; in the worst case, consumer lag may be a little overstated. Checking these offsets in the reverse order can understate consumer lag to the point of having negative values, which is a dire scenario usually indicating messages are being skipped.
+- If you want to collect JMX metrics from your Kafka brokers or Java-based consumers/producers, see the [Kafka Broker integration][19].
 
-This check fetches the highwater offsets from the Kafka brokers, consumer offsets that are stored in Kafka or zookeeper (for old-style consumers), and the calculated consumer lag (which is the difference between the broker offset and the consumer offset).
-
-**Note:** This integration ensures that consumer offsets are checked before broker offsets because worst case is that consumer lag is a little overstated. Doing it in reverse can understate consumer lag to the point of having negative values, which is a dire scenario usually indicating messages are being skipped.
 
 ## Setup
 
@@ -25,7 +24,7 @@ The Agent's Kafka consumer check is included in the [Datadog Agent][2] package. 
 
 #### Host
 
-To configure this check for an Agent running on a host:
+To configure this check for an Agent running on a host running your Kafka consumers:
 
 ##### Metric collection
 
@@ -42,7 +41,19 @@ This check does not collect additional logs. To collect logs from Kafka brokers,
 
 #### Containerized
 
-For containerized environments, see the [Autodiscovery with JMX][7] guide.
+For containerized environments, see the [Autodiscovery Integration Templates][17] for guidance on applying the parameters below.
+
+##### Metric collection
+
+| Parameter            | Value                                |
+| -------------------- | ------------------------------------ |
+| `<INTEGRATION_NAME>` | `kafka_consumer`                     |
+| `<INIT_CONFIG>`      | blank or `{}`                        |
+| `<INSTANCE_CONFIG>`  | `{"kafka_connect_str": <KAFKA_CONNECT_STR>}` <br/>For example, `{"kafka_connect_str": "server:9092"}` |
+
+##### Log collection
+
+This check does not collect additional logs. To collect logs from Kafka brokers, see [log collection instructions for Kafka][6].
 
 <!-- xxz tab xxx -->
 <!-- xxz tabs xxx -->
@@ -130,4 +141,6 @@ sudo service datadog-agent restart
 [13]: https://www.datadoghq.com/blog/monitoring-kafka-performance-metrics
 [14]: https://www.datadoghq.com/blog/collecting-kafka-performance-metrics
 [15]: https://www.datadoghq.com/blog/monitor-kafka-with-datadog
-[16]: https://www.datadoghq.com/product/data-streams-monitoring/
+[17]: https://docs.datadoghq.com/containers/kubernetes/integrations/
+[18]: https://app.datadoghq.com/data-streams
+[19]: https://app.datadoghq.com/integrations/kafka?search=kafka

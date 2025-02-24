@@ -3,6 +3,7 @@
 # Licensed under a 3-clause BSD style license (see LICENSE)
 
 import copy
+import os
 import re
 import time
 from contextlib import contextmanager
@@ -13,7 +14,7 @@ import pytest
 
 from datadog_checks.base import ConfigurationError
 
-from .common import HOST, PASSWORD_ADMIN, USER_ADMIN, _get_expected_tags
+from .common import HOST, PASSWORD_ADMIN, USER_ADMIN, _get_expected_tags, check_common_metrics
 from .utils import requires_over_13, run_one_check
 
 DISCOVERY_CONFIG = {
@@ -21,6 +22,9 @@ DISCOVERY_CONFIG = {
     "include": ["dogs_([0-9]|[1-9][0-9]|10[0-9])"],
     "exclude": ["dogs_5$", "dogs_50$"],
 }
+
+POSTGRES_VERSION = os.environ.get('POSTGRES_VERSION', None)
+
 
 # the number of test databases that exist from [dogs_0, dogs_100]
 NUM_DOGS_DATABASES = 101
@@ -53,6 +57,28 @@ DYNAMIC_RELATION_METRICS = {
     'postgresql.total_size',
 }
 
+FUNCTION_METRICS = {
+    'postgresql.function.calls',
+    'postgresql.function.total_time',
+    'postgresql.function.self_time',
+}
+
+COUNT_METRICS = {
+    'postgresql.table.count',
+}
+
+CHECKSUM_METRICS = {
+    'postgresql.checksums.checksum_failures',
+}
+
+
+@contextmanager
+def get_postgres_connection(dbname="postgres"):
+    conn_args = {'host': HOST, 'dbname': dbname, 'user': USER_ADMIN, 'password': PASSWORD_ADMIN}
+    conn = psycopg2.connect(**conn_args)
+    conn.autocommit = True
+    yield conn
+
 
 @pytest.mark.integration
 @pytest.mark.usefixtures('dd_environment')
@@ -61,6 +87,25 @@ def test_autodiscovery_simple(integration_check, pg_instance):
     Test simple autodiscovery.
     """
     pg_instance["database_autodiscovery"] = DISCOVERY_CONFIG
+    pg_instance['relations'] = ['pg_index']
+    del pg_instance['dbname']
+    check = integration_check(pg_instance)
+    run_one_check(check, pg_instance)
+
+    assert check.autodiscovery is not None
+    databases = check.autodiscovery.get_items()
+    expected_len = NUM_DOGS_DATABASES - len(DISCOVERY_CONFIG["exclude"])
+    assert len(databases) == expected_len
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_autodiscovery_global_view_db_specified(integration_check, pg_instance):
+    """
+    Test autodiscovery with global view db specified.
+    """
+    pg_instance["database_autodiscovery"] = copy.deepcopy(DISCOVERY_CONFIG)
+    pg_instance["database_autodiscovery"]["global_view_db"] = "dogs_0"
     pg_instance['relations'] = ['pg_index']
     del pg_instance['dbname']
     check = integration_check(pg_instance)
@@ -111,20 +156,13 @@ def test_autodiscovery_refresh(integration_check, pg_instance):
     """
     database_to_find = "cats"
 
-    @contextmanager
-    def get_postgres_connection():
-        conn_args = {'host': HOST, 'dbname': "postgres", 'user': USER_ADMIN, 'password': PASSWORD_ADMIN}
-        conn = psycopg2.connect(**conn_args)
-        conn.autocommit = True
-        yield conn
-
     pg_instance["database_autodiscovery"] = copy.deepcopy(DISCOVERY_CONFIG)
     pg_instance['database_autodiscovery']['include'].append(database_to_find)
     pg_instance['relations'] = ['pg_index']
     del pg_instance['dbname']
     pg_instance["database_autodiscovery"]['refresh'] = 1
     check = integration_check(pg_instance)
-    run_one_check(check, pg_instance)
+    run_one_check(check)
 
     assert check.autodiscovery is not None
     databases = check.autodiscovery.get_items()
@@ -150,7 +188,7 @@ def test_autodiscovery_refresh(integration_check, pg_instance):
 @pytest.mark.usefixtures('dd_environment')
 def test_autodiscovery_relations_disabled(integration_check, pg_instance):
     """
-    If no relation metrics are being collected, autodiscovery should not run.
+    If no relation metrics are being collected, autodiscovery should still run.
     """
     pg_instance["database_autodiscovery"] = DISCOVERY_CONFIG
     pg_instance['relations'] = []
@@ -158,37 +196,65 @@ def test_autodiscovery_relations_disabled(integration_check, pg_instance):
     check = integration_check(pg_instance)
     run_one_check(check, pg_instance)
 
-    assert check.autodiscovery is None
+    assert check.autodiscovery is not None
 
 
 @pytest.mark.integration
 @pytest.mark.usefixtures('dd_environment')
-def test_autodiscovery_collect_all_relations(aggregator, integration_check, pg_instance):
+def test_autodiscovery_collect_all_metrics(aggregator, integration_check, pg_instance):
     """
-    Check that relation metrics get collected for each database discovered.
+    Check that metrics get collected for each database discovered.
     """
     pg_instance["database_autodiscovery"] = copy.deepcopy(DISCOVERY_CONFIG)
     pg_instance["database_autodiscovery"]["include"] = ["dogs$", "dogs_noschema$", "dogs_nofunc$"]
     pg_instance['relations'] = [
         {'relation_regex': '.*'},
     ]
+    pg_instance['collect_function_metrics'] = True
+    pg_instance['collect_count_metrics'] = True
+    pg_instance['collect_checksum_metrics'] = True
     del pg_instance['dbname']
+
+    # execute dummy_function to populate pg_stat_user_functions for dogs_nofunc database
+    # it does not make sense to create and execute the dummy_function for every single database
+    with get_postgres_connection(dbname='dogs_nofunc') as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT dummy_function()")
+    conn.close()
 
     check = integration_check(pg_instance)
     check.check(pg_instance)
 
-    # assert that for all databases found, a relation metric was reported
+    # assert that for all databases found,
+    # relation/function/count metrics were reported
     databases = check.autodiscovery.get_items()
     for db in databases:
-        expected_tags = _get_expected_tags(check, pg_instance, db=db, table='breed', schema='public')
+        relation_metrics_expected_tags = _get_expected_tags(check, pg_instance, db=db, table='breed', schema='public')
+        count_metrics_expected_tags = _get_expected_tags(check, pg_instance, db=db, schema='public')
+        checksum_metrics_expected_tags = _get_expected_tags(check, pg_instance, db=db)
         for metric in RELATION_METRICS:
-            aggregator.assert_metric(metric, tags=expected_tags)
+            aggregator.assert_metric(metric, tags=relation_metrics_expected_tags)
         for metric in DYNAMIC_RELATION_METRICS:
-            aggregator.assert_metric(metric, tags=expected_tags)
+            aggregator.assert_metric(metric, tags=relation_metrics_expected_tags)
+        for metric in COUNT_METRICS:
+            aggregator.assert_metric(metric, tags=count_metrics_expected_tags)
+        if float(POSTGRES_VERSION) >= 12:
+            for metric in CHECKSUM_METRICS:
+                aggregator.assert_metric(metric, tags=checksum_metrics_expected_tags)
+
+    # we only created and executed the dummy_function in dogs_nofunc database
+    for metric in FUNCTION_METRICS:
+        aggregator.assert_metric(
+            metric,
+            tags=_get_expected_tags(check, pg_instance, db='dogs_nofunc', schema='public', function='dummy_function'),
+        )
 
     aggregator.assert_metric(
         'dd.postgres._collect_relations_autodiscovery.time',
     )
+    if float(POSTGRES_VERSION) >= 12:
+        checksum_metrics_expected_tags = _get_expected_tags(check, pg_instance, with_db=False, enabled="true")
+        aggregator.assert_metric('postgresql.checksums.enabled', value=1, tags=checksum_metrics_expected_tags)
 
 
 @pytest.mark.integration
@@ -232,3 +298,29 @@ def test_autodiscovery_dbname_specified(integration_check, pg_instance):
 
     with pytest.raises(ConfigurationError):
         integration_check(pg_instance)
+
+
+def _set_allow_connection(dbname: str, allow: bool):
+    with get_postgres_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            psycopg2.sql.SQL("UPDATE pg_database SET datallowconn = %s WHERE datname = %s;"),
+            (allow, dbname),
+        )
+        conn.commit()
+
+
+@pytest.mark.integration
+def test_handle_cannot_connect(aggregator, integration_check, pg_instance):
+    db_to_disable = "dogs_0"
+    _set_allow_connection(db_to_disable, False)
+    pg_instance["database_autodiscovery"] = {"enabled": True, "include": ["dogs_[0-3]"]}
+    pg_instance['relations'] = [
+        {'relation_regex': '.*'},
+    ]
+    del pg_instance['dbname']
+    check = integration_check(pg_instance)
+    run_one_check(check, pg_instance)
+    expected_tags = _get_expected_tags(check, pg_instance)
+    check_common_metrics(aggregator, expected_tags=expected_tags)
+    _set_allow_connection(db_to_disable, True)

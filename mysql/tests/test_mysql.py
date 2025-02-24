@@ -3,7 +3,6 @@
 # Licensed under a 3-clause BSD style license (see LICENSE)
 import copy
 import logging
-from os import environ
 
 import mock
 import pytest
@@ -17,6 +16,7 @@ from datadog_checks.mysql.const import (
     BINLOG_VARS,
     GALERA_VARS,
     GROUP_REPLICATION_VARS,
+    GROUP_REPLICATION_VARS_8_0_2,
     INNODB_VARS,
     OPTIONAL_STATUS_VARS,
     OPTIONAL_STATUS_VARS_5_6_6,
@@ -48,6 +48,8 @@ def test_minimal_config(aggregator, dd_run_check, instance_basic):
         + variables.INNODB_VARS
         + variables.BINLOG_VARS
         + variables.COMMON_PERFORMANCE_VARS
+        + variables.INDEX_SIZE_VARS
+        + variables.INDEX_USAGE_VARS
     )
 
     operation_time_metrics = (
@@ -73,7 +75,6 @@ def test_minimal_config(aggregator, dd_run_check, instance_basic):
             continue
         else:
             aggregator.assert_metric(mname, at_least=1)
-        aggregator.assert_metric(mname, at_least=1)
 
     optional_metrics = (
         variables.COMPLEX_STATUS_VARS
@@ -101,7 +102,7 @@ def test_complex_config(aggregator, dd_run_check, instance_complex):
 
     _assert_complex_config(
         aggregator,
-        tags.SC_TAGS + [tags.DATABASE_INSTANCE_RESOURCE_TAG.format(hostname='stubbed.hostname')],
+        tags.SC_TAGS + tags.database_instance_resource_tags('stubbed.hostname'),
         tags.METRIC_TAGS_WITH_RESOURCE,
     )
     aggregator.assert_metrics_using_metadata(
@@ -111,13 +112,24 @@ def test_complex_config(aggregator, dd_run_check, instance_complex):
     )
 
 
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_mysql_version_set(aggregator, dd_run_check, instance_basic):
+    mysql_check = MySql(common.CHECK_NAME, {}, [instance_basic])
+    # run check twice to test the version is set once and only once
+    dd_run_check(mysql_check, cancel=False)
+    dd_run_check(mysql_check, cancel=True)
+    assert mysql_check.version is not None
+    assert mysql_check.tags.count('dbms_flavor:{}'.format(mysql_check.version.flavor.lower())) == 1
+
+
 @pytest.mark.e2e
 def test_e2e(dd_agent_check, dd_default_hostname, instance_complex):
     aggregator = dd_agent_check(instance_complex)
     _assert_complex_config(
         aggregator,
-        tags.SC_TAGS + [tags.DATABASE_INSTANCE_RESOURCE_TAG.format(hostname=dd_default_hostname)],
-        tags.METRIC_TAGS,
+        tags.SC_TAGS + tags.database_instance_resource_tags(dd_default_hostname),
+        tags.METRIC_TAGS + [f'database_hostname:{dd_default_hostname}', 'dbms_flavor:{}'.format(MYSQL_FLAVOR.lower())],
         hostname=dd_default_hostname,
         e2e=True,
     )
@@ -161,17 +173,23 @@ def _assert_complex_config(aggregator, service_check_tags, metric_tags, hostname
         + variables.STATEMENT_VARS
         + variables.TABLE_VARS
         + variables.ROW_TABLE_STATS_VARS
+        + variables.INDEX_SIZE_VARS
+        + variables.INDEX_USAGE_VARS
     )
 
     operation_time_metrics = variables.SIMPLE_OPERATION_TIME_METRICS + variables.COMPLEX_OPERATION_TIME_METRICS
 
     if MYSQL_REPLICATION == 'group':
+
         testable_metrics.extend(variables.GROUP_REPLICATION_VARS)
+        additional_tags = ['channel_name:group_replication_applier', 'member_state:ONLINE']
+        if MYSQL_VERSION_PARSED >= parse_version('8.0'):
+            testable_metrics.extend(variables.GROUP_REPLICATION_VARS_8_0_2)
+            additional_tags.append('member_role:PRIMARY')
         aggregator.assert_service_check(
             'mysql.replication.group.status',
             status=MySql.OK,
-            tags=service_check_tags
-            + ['channel_name:group_replication_applier', 'member_role:PRIMARY', 'member_state:ONLINE'],
+            tags=service_check_tags + additional_tags,
             count=1,
         )
         operation_time_metrics.extend(variables.GROUP_REPLICATION_OPERATION_TIME_METRICS)
@@ -229,6 +247,7 @@ def _assert_complex_config(aggregator, service_check_tags, metric_tags, hostname
     aggregator.assert_metric('alice.age', value=25)
     aggregator.assert_metric('bob.age', value=20)
 
+    _test_index_metrics(aggregator, variables.INDEX_USAGE_VARS + variables.INDEX_SIZE_VARS, metric_tags)
     # test optional metrics
     optional_metrics = (
         variables.OPTIONAL_REPLICATION_METRICS
@@ -300,6 +319,7 @@ def test_complex_config_replica(aggregator, dd_run_check, instance_complex):
         + variables.STATEMENT_VARS
         + variables.TABLE_VARS
         + variables.ROW_TABLE_STATS_VARS
+        + variables.INDEX_SIZE_VARS
     )
 
     operation_time_metrics = (
@@ -308,8 +328,10 @@ def test_complex_config_replica(aggregator, dd_run_check, instance_complex):
         + variables.REPLICATION_OPERATION_TIME_METRICS
     )
 
-    if MYSQL_VERSION_PARSED >= parse_version('5.6') and environ.get('MYSQL_FLAVOR') != 'mariadb':
-        testable_metrics.extend(variables.PERFORMANCE_VARS + variables.COMMON_PERFORMANCE_VARS)
+    if MYSQL_VERSION_PARSED >= parse_version('5.6') and MYSQL_FLAVOR != 'mariadb':
+        testable_metrics.extend(
+            variables.PERFORMANCE_VARS + variables.COMMON_PERFORMANCE_VARS + variables.INDEX_USAGE_VARS
+        )
         operation_time_metrics.extend(
             variables.COMMON_PERFORMANCE_OPERATION_TIME_METRICS + variables.PERFORMANCE_OPERATION_TIME_METRICS
         )
@@ -386,11 +408,12 @@ def test_complex_config_replica(aggregator, dd_run_check, instance_complex):
         assert mysql_check._is_group_replication_active(db) is False
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     'dbm_enabled, reported_hostname, expected_hostname',
     [
         (True, '', 'resolved.hostname'),
-        (False, '', 'stubbed.hostname'),
+        (False, '', 'resolved.hostname'),
         (False, 'forced_hostname', 'forced_hostname'),
         (True, 'forced_hostname', 'forced_hostname'),
     ],
@@ -409,12 +432,10 @@ def test_correct_hostname(dbm_enabled, reported_hostname, expected_hostname, agg
     with mock.patch('datadog_checks.mysql.MySql.resolve_db_host', return_value='resolved.hostname') as resolve_db_host:
         mysql_check = MySql(common.CHECK_NAME, {}, [instance_basic])
         dd_run_check(mysql_check)
-        if reported_hostname:
-            assert resolve_db_host.called is False, 'Expected resolve_db_host.called to be False'
-        else:
-            assert resolve_db_host.called == dbm_enabled, 'Expected resolve_db_host.called to be ' + str(dbm_enabled)
+        assert resolve_db_host.called is True
 
     expected_tags = [
+        'database_hostname:{}'.format(mysql_check.database_hostname),
         'server:{}'.format(HOST),
         'port:{}'.format(PORT),
         'dd.internal.resource:database_instance:{}'.format(expected_hostname),
@@ -453,6 +474,43 @@ def test_correct_hostname(dbm_enabled, reported_hostname, expected_hostname, agg
 
     for mname in optional_metrics:
         aggregator.assert_metric(mname, hostname=expected_hostname, at_least=0)
+
+
+def _test_index_metrics(aggregator, index_metrics, metric_tags):
+    for mname in index_metrics:
+        if mname in ['mysql.index.reads', 'mysql.index.updates', 'mysql.index.deletes']:
+            aggregator.assert_metric(
+                mname,
+                tags=metric_tags + ['db:testdb', 'table:users', 'index:id'],
+                count=1,
+            )
+            aggregator.assert_metric(
+                mname,
+                tags=metric_tags
+                + [
+                    'db:datadog_test_schemas',
+                    'table:cities',
+                    'index:single_column_index',
+                ],
+                count=1,
+            )
+            aggregator.assert_metric(
+                mname,
+                tags=metric_tags + ['db:datadog_test_schemas', 'table:cities', 'index:two_columns_index'],
+                count=1,
+            )
+        if mname == 'mysql.index.size':
+            aggregator.assert_metric(mname, tags=metric_tags + ['db:testdb', 'table:users', 'index:id'], count=1)
+            aggregator.assert_metric(
+                mname,
+                tags=metric_tags + ['db:datadog_test_schemas', 'table:cities', 'index:single_column_index'],
+                count=1,
+            )
+            aggregator.assert_metric(
+                mname,
+                tags=metric_tags + ['db:datadog_test_schemas', 'table:cities', 'index:two_columns_index'],
+                count=1,
+            )
 
 
 def _test_optional_metrics(aggregator, optional_metrics):
@@ -531,6 +589,10 @@ def test_only_custom_queries(aggregator, dd_run_check, instance_custom_queries):
         GROUP_REPLICATION_VARS,
         variables.QUERY_EXECUTOR_METRIC_SETS,
     ]
+
+    if MYSQL_VERSION_PARSED >= parse_version('8.0.2'):
+        standard_metric_sets.append(GROUP_REPLICATION_VARS_8_0_2)
+
     for metric_set in standard_metric_sets:
         for metric_def in metric_set.values():
             metric = metric_def[0]
@@ -701,7 +763,8 @@ def test_set_resources(aggregator, dd_run_check, instance_basic, cloud_metadata,
     for m in metric_names:
         aggregator.assert_metric_has_tag("mysql.net.connections", m)
     aggregator.assert_metric_has_tag(
-        "mysql.net.connections", tags.DATABASE_INSTANCE_RESOURCE_TAG.format(hostname=mysql_check.resolved_hostname)
+        "mysql.net.connections",
+        f'dd.internal.resource:database_instance:{mysql_check.resolved_hostname}',
     )
 
 
@@ -737,7 +800,7 @@ def test_database_instance_metadata(aggregator, dd_run_check, instance_complex, 
     assert event['dbms'] == "mysql"
     assert event['tags'].sort() == tags.METRIC_TAGS.sort()
     assert event['integration_version'] == __version__
-    assert event['collection_interval'] == 1800
+    assert event['collection_interval'] == 300
     assert event['metadata'] == {
         'dbm': dbm_enabled,
         'connection_host': instance_complex['host'],
@@ -750,3 +813,60 @@ def test_database_instance_metadata(aggregator, dd_run_check, instance_complex, 
     dbm_metadata = aggregator.get_event_platform_events("dbm-metadata")
     event = next((e for e in dbm_metadata if e['kind'] == 'database_instance'), None)
     assert event is None
+
+
+@pytest.mark.parametrize(
+    'instance_propagate_agent_tags,init_config_propagate_agent_tags,should_propagate_agent_tags',
+    [
+        pytest.param(True, True, True, id="both true"),
+        pytest.param(True, False, True, id="instance config true prevails"),
+        pytest.param(False, True, False, id="instance config false prevails"),
+        pytest.param(False, False, False, id="both false"),
+        pytest.param(None, True, True, id="init_config true applies to all instances"),
+        pytest.param(None, False, False, id="init_config false applies to all instances"),
+        pytest.param(None, None, False, id="default to false"),
+        pytest.param(True, None, True, id="instance config true prevails, init_config is None"),
+        pytest.param(False, None, False, id="instance config false prevails, init_config is None"),
+    ],
+)
+@pytest.mark.integration
+def test_propagate_agent_tags(
+    aggregator,
+    dd_run_check,
+    instance_basic,
+    instance_propagate_agent_tags,
+    init_config_propagate_agent_tags,
+    should_propagate_agent_tags,
+):
+    instance_basic['propagate_agent_tags'] = instance_propagate_agent_tags
+    init_config = {}
+    if init_config_propagate_agent_tags is not None:
+        init_config['propagate_agent_tags'] = init_config_propagate_agent_tags
+
+    agent_tags = ['my-env:test-env', 'random:tag', 'bar:foo']
+    expected_tags = (
+        instance_basic.get('tags', [])
+        + [
+            'database_hostname:stubbed.hostname',
+            'server:{}'.format(HOST),
+            'port:{}'.format(PORT),
+            'dd.internal.resource:database_instance:forced_hostname',
+            "dd.internal.resource:aws_rds_instance:foo.aws.com",
+            "dd.internal.resource:azure_mysql_server:my-instance",
+            'dd.internal.resource:gcp_sql_database_instance:foo-project:bar',
+        ]
+        + agent_tags
+    )
+
+    with mock.patch('datadog_checks.mysql.config.get_agent_host_tags', return_value=agent_tags):
+        check = MySql(common.CHECK_NAME, init_config, [instance_basic])
+        assert check._config._should_propagate_agent_tags(instance_basic, init_config) == should_propagate_agent_tags
+        if should_propagate_agent_tags:
+            assert all(tag in check.tags for tag in agent_tags)
+            dd_run_check(check)
+            aggregator.assert_service_check(
+                'mysql.can_connect',
+                count=1,
+                status=MySql.OK,
+                tags=expected_tags,
+            )

@@ -3,7 +3,7 @@ base_package:
 changelog/no-changelog:
 - any:
   - requirements-agent-release.txt
-  - '*/__about__.py'
+  - '**/__about__.py'
 - all:
   - '!*/datadog_checks/**'
   - '!*/pyproject.toml'
@@ -11,7 +11,7 @@ changelog/no-changelog:
 ddev:
 - ddev/**/*
 dependencies:
-- datadog_checks_base/datadog_checks/base/data/agent_requirements.in
+- agent_requirements.in
 dependency_provider:
 - datadog_checks_dependency_provider/**/*
 dev/testing:
@@ -39,6 +39,8 @@ integration/activemq:
 - activemq/**/*
 integration/activemq_xml:
 - activemq_xml/**/*
+integration/adyen:
+- adyen/**/*
 integration/aerospike:
 - aerospike/**/*
 integration/agent_metrics:
@@ -55,22 +57,44 @@ integration/amazon_msk:
 - amazon_msk/**/*
 integration/ambari:
 - ambari/**/*
+integration/anthropic:
+- anthropic/**/*
+integration/anyscale:
+- anyscale/**/*
 integration/apache:
 - apache/**/*
+integration/appgate_sdp:
+- appgate_sdp/**/*
 integration/arangodb:
 - arangodb/**/*
+integration/argo_rollouts:
+- argo_rollouts/**/*
+integration/argo_workflows:
+- argo_workflows/**/*
 integration/argocd:
 - argocd/**/*
+integration/asana:
+- asana/**/*
 integration/aspdotnet:
 - aspdotnet/**/*
+integration/authorize_net:
+- authorize_net/**/*
+integration/avast:
+- avast/**/*
 integration/avi_vantage:
 - avi_vantage/**/*
+integration/aws_neuron:
+- aws_neuron/**/*
 integration/azure_active_directory:
 - azure_active_directory/**/*
 integration/azure_iot_edge:
 - azure_iot_edge/**/*
+integration/blazemeter:
+- blazemeter/**/*
 integration/boundary:
 - boundary/**/*
+integration/brevo:
+- brevo/**/*
 integration/btrfs:
 - btrfs/**/*
 integration/cacti:
@@ -85,10 +109,26 @@ integration/ceph:
 - ceph/**/*
 integration/cert_manager:
 - cert_manager/**/*
+integration/checkpoint_quantum_firewall:
+- checkpoint_quantum_firewall/**/*
 integration/cilium:
 - cilium/**/*
 integration/cisco_aci:
 - cisco_aci/**/*
+integration/cisco_duo:
+- cisco_duo/**/*
+integration/cisco_sdwan:
+- cisco_sdwan/**/*
+integration/cisco_secure_email_threat_defense:
+- cisco_secure_email_threat_defense/**/*
+integration/cisco_secure_endpoint:
+- cisco_secure_endpoint/**/*
+integration/cisco_secure_firewall:
+- cisco_secure_firewall/**/*
+integration/cisco_secure_web_appliance:
+- cisco_secure_web_appliance/**/*
+integration/cisco_umbrella_dns:
+- cisco_umbrella_dns/**/*
 integration/citrix_hypervisor:
 - citrix_hypervisor/**/*
 integration/clickhouse:
@@ -109,6 +149,8 @@ integration/container:
 - container/**/*
 integration/containerd:
 - containerd/**/*
+integration/contentful:
+- contentful/**/*
 integration/coredns:
 - coredns/**/*
 integration/couch:
@@ -129,6 +171,8 @@ integration/datadog_operator:
 - datadog_operator/**/*
 integration/dcgm:
 - dcgm/**/*
+integration/delinea_privilege_manager:
+- delinea_privilege_manager/**/*
 integration/directory:
 - directory/**/*
 integration/disk:
@@ -137,10 +181,14 @@ integration/dns_check:
 - dns_check/**/*
 integration/docker_daemon:
 - docker_daemon/**/*
+integration/docusign:
+- docusign/**/*
 integration/dotnetclr:
 - dotnetclr/**/*
 integration/druid:
 - druid/**/*
+integration/duckdb:
+- duckdb/**/*
 integration/ecs_fargate:
 - ecs_fargate/**/*
 integration/eks_anywhere:
@@ -151,20 +199,38 @@ integration/elastic:
 - elastic/**/*
 integration/envoy:
 - envoy/**/*
+integration/esxi:
+- esxi/**/*
 integration/etcd:
 - etcd/**/*
 integration/exchange_server:
 - exchange_server/**/*
 integration/external_dns:
 - external_dns/**/*
+integration/extrahop:
+- extrahop/**/*
+integration/falco:
+- falco/**/*
 integration/flink:
 - flink/**/*
 integration/fluentd:
 - fluentd/**/*
+integration/fluxcd:
+- fluxcd/**/*
+integration/fly_io:
+- fly_io/**/*
+integration/forcepoint_secure_web_gateway:
+- forcepoint_secure_web_gateway/**/*
+integration/forcepoint_security_service_edge:
+- forcepoint_security_service_edge/**/*
 integration/foundationdb:
 - foundationdb/**/*
+integration/freshservice:
+- freshservice/**/*
 integration/gearmand:
 - gearmand/**/*
+integration/genesys:
+- genesys/**/*
 integration/gitlab:
 - gitlab/**/*
 integration/gitlab_runner:
@@ -177,6 +243,12 @@ integration/go-metro:
 - go-metro/**/*
 integration/go_expvar:
 - go_expvar/**/*
+integration/godaddy:
+- godaddy/**/*
+integration/gpu:
+- gpu/**/*
+integration/greenhouse:
+- greenhouse/**/*
 integration/gunicorn:
 - gunicorn/**/*
 integration/haproxy:
@@ -197,6 +269,8 @@ integration/hivemq:
 - hivemq/**/*
 integration/http_check:
 - http_check/**/*
+integration/hubspot_content_hub:
+- hubspot_content_hub/**/*
 integration/hudi:
 - hudi/**/*
 integration/hyperv:
@@ -219,8 +293,16 @@ integration/iis:
 - iis/**/*
 integration/impala:
 - impala/**/*
+integration/intercom:
+- intercom/**/*
+integration/incident_io:
+- incident_io/**/*
 integration/istio:
 - istio/**/*
+integration/ivanti_nzta:
+- ivanti_nzta/**/*
+integration/ivanti_connect_secure:
+- ivanti_connect_secure/**/*
 integration/jboss_wildfly:
 - jboss_wildfly/**/*
 integration/jmeter:
@@ -231,6 +313,12 @@ integration/kafka:
 - kafka/**/*
 integration/kafka_consumer:
 - kafka_consumer/**/*
+integration/karpenter:
+- karpenter/**/*
+integration/keda:
+- keda/**/*
+integration/keycloak:
+- keycloak/**/*
 integration/kong:
 - kong/**/*
 integration/kube_apiserver_metrics:
@@ -245,24 +333,42 @@ integration/kube_proxy:
 - kube_proxy/**/*
 integration/kube_scheduler:
 - kube_scheduler/**/*
+integration/kubeflow:
+- kubeflow/**/*
 integration/kubelet:
 - kubelet/**/*
 integration/kubernetes:
 - kubernetes/**/*
+integration/kubernetes_admission:
+- kubernetes_admission/**/*
+integration/kubernetes_cluster_autoscaler:
+- kubernetes_cluster_autoscaler/**/*
 integration/kubernetes_state:
 - kubernetes_state/**/*
 integration/kubernetes_state_core:
 - kubernetes_state_core/**/*
+integration/kubevirt_api:
+- kubevirt_api/**/*
+integration/kubevirt_controller:
+- kubevirt_controller/**/*
+integration/kubevirt_handler:
+- kubevirt_handler/**/*
 integration/kyototycoon:
 - kyototycoon/**/*
+integration/kyverno:
+- kyverno/**/*
 integration/langchain:
 - langchain/**/*
+integration/lastpass:
+- lastpass/**/*
 integration/lighttpd:
 - lighttpd/**/*
 integration/linkerd:
 - linkerd/**/*
 integration/linux_proc_extras:
 - linux_proc_extras/**/*
+integration/mailchimp:
+- mailchimp/**/*
 integration/mapr:
 - mapr/**/*
 integration/mapreduce:
@@ -277,14 +383,24 @@ integration/mesos_master:
 - mesos_master/**/*
 integration/mesos_slave:
 - mesos_slave/**/*
+integration/metabase:
+- metabase/**/*
+integration/milvus:
+- milvus/**/*
+integration/mimecast:
+- mimecast/**/*
 integration/mongo:
 - mongo/**/*
+integration/mux:
+- mux/**/*
 integration/mysql:
 - mysql/**/*
 integration/nagios:
 - nagios/**/*
 integration/network:
 - network/**/*
+integration/network_path:
+- network_path/**/*
 integration/nfsstat:
 - nfsstat/**/*
 integration/nginx:
@@ -295,8 +411,16 @@ integration/ntp:
 - ntp/**/*
 integration/nvidia_jetson:
 - nvidia_jetson/**/*
+integration/nvidia_nim:
+- nvidia_nim/**/*
+integration/nvidia_triton:
+- nvidia_triton/**/*
+integration/octopus_deploy:
+- octopus_deploy/**/*
 integration/oke:
 - oke/**/*
+integration/okta_workflows:
+- okta_workflows/**/*
 integration/oom_kill:
 - oom_kill/**/*
 integration/openai:
@@ -313,8 +437,16 @@ integration/openstack_controller:
 - openstack_controller/**/*
 integration/oracle:
 - oracle/**/*
+integration/orca_security:
+- orca_security/**/*
+integration/ossec_security:
+- ossec_security/**/*
 integration/otel:
 - otel/**/*
+integration/palo_alto_cortex_xdr:
+- palo_alto_cortex_xdr/**/*
+integration/palo_alto_panorama:
+- palo_alto_panorama/**/*
 integration/pan_firewall:
 - pan_firewall/**/*
 integration/pdh_check:
@@ -323,14 +455,24 @@ integration/pgbouncer:
 - pgbouncer/**/*
 integration/php_fpm:
 - php_fpm/**/*
+integration/ping_federate:
+- ping_federate/**/*
+integration/ping_one:
+- ping_one/**/*
 integration/pivotal_pks:
 - pivotal_pks/**/*
+integration/plivo:
+- plivo/**/*
+integration/plaid:
+- plaid/**/*
 integration/podman:
 - podman/**/*
 integration/postfix:
 - postfix/**/*
 integration/postgres:
 - postgres/**/*
+integration/postmark:
+- postmark/**/*
 integration/powerdns_recursor:
 - powerdns_recursor/**/*
 integration/presto:
@@ -343,6 +485,8 @@ integration/proxysql:
 - proxysql/**/*
 integration/pulsar:
 - pulsar/**/*
+integration/quarkus:
+- quarkus/**/*
 integration/rabbitmq:
 - rabbitmq/**/*
 integration/ray:
@@ -355,16 +499,26 @@ integration/riak:
 - riak/**/*
 integration/riakcs:
 - riakcs/**/*
+integration/ringcentral:
+- ringcentral/**/*
+integration/sanity:
+- sanity/**/*
 integration/sap_hana:
 - sap_hana/**/*
 integration/scylla:
 - scylla/**/*
+integration/servicenow_performance:
+- servicenow_performance/**/*
+integration/shopify:
+- shopify/**/*
 integration/sidekiq:
 - sidekiq/**/*
 integration/silk:
 - silk/**/*
 integration/singlestore:
 - singlestore/**/*
+integration/slurm:
+- slurm/**/*
 integration/snmp:
 - snmp/**/*
 integration/snmp_american_power_conversion:
@@ -397,6 +551,10 @@ integration/solr:
 - solr/**/*
 integration/sonarqube:
 - sonarqube/**/*
+integration/sonicwall_firewall:
+- sonicwall_firewall/**/*
+integration/sophos_central_cloud:
+- sophos_central_cloud/**/*
 integration/spark:
 - spark/**/*
 integration/sqlserver:
@@ -407,30 +565,52 @@ integration/ssh_check:
 - ssh_check/**/*
 integration/statsd:
 - statsd/**/*
+integration/streamnative:
+- streamnative/**/*
 integration/strimzi:
 - strimzi/**/*
+integration/supabase:
+- supabase/**/*
 integration/supervisord:
 - supervisord/**/*
+integration/suricata:
+- suricata/**/*
+integration/symantec_endpoint_protection:
+- symantec_endpoint_protection/**/*
+integration/symantec_vip:
+- symantec_vip/**/*
 integration/system_core:
 - system_core/**/*
 integration/system_swap:
 - system_swap/**/*
 integration/systemd:
 - systemd/**/*
+integration/tanium:
+- tanium/**/*
 integration/tcp_check:
 - tcp_check/**/*
 integration/tcp_queue_length:
 - tcp_queue_length/**/*
 integration/teamcity:
 - teamcity/**/*
+integration/tekton:
+- tekton/**/*
+integration/teleport:
+- teleport/**/*
 integration/temporal:
 - temporal/**/*
+integration/temporal_cloud:
+- temporal_cloud/**/*
 integration/tenable:
 - tenable/**/*
+integration/tenable_io:
+- tenable_io/**/*
 integration/teradata:
 - teradata/**/*
 integration/terraform:
 - terraform/**/*
+integration/tibco_ems:
+- tibco_ems/**/*
 integration/tls:
 - tls/**/*
 integration/tokumx:
@@ -439,8 +619,18 @@ integration/tomcat:
 - tomcat/**/*
 integration/torchserve:
 - torchserve/**/*
+integration/traefik_mesh:
+- traefik_mesh/**/*
 integration/traffic_server:
 - traffic_server/**/*
+integration/trellix_endpoint_security:
+- trellix_endpoint_security/**/*
+integration/trend_micro_email_security:
+- trend_micro_email_security/**/*
+integration/trend_micro_vision_one_endpoint_security:
+- trend_micro_vision_one_endpoint_security/**/*
+integration/trend_micro_vision_one_xdr:
+- trend_micro_vision_one_xdr/**/*
 integration/twemproxy:
 - twemproxy/**/*
 integration/twistlock:
@@ -451,10 +641,16 @@ integration/vault:
 - vault/**/*
 integration/vertica:
 - vertica/**/*
+integration/vllm:
+- vllm/**/*
 integration/voltdb:
 - voltdb/**/*
+integration/vonage:
+- vonage/**/*
 integration/vsphere:
 - vsphere/**/*
+integration/wazuh:
+- wazuh/**/*
 integration/weaviate:
 - weaviate/**/*
 integration/weblogic:
@@ -465,6 +661,8 @@ integration/wincrashdetect:
 - wincrashdetect/**/*
 integration/windows_performance_counters:
 - windows_performance_counters/**/*
+integration/windows_registry:
+- windows_registry/**/*
 integration/windows_service:
 - windows_service/**/*
 integration/winkmem:
@@ -473,8 +671,15 @@ integration/wmi_check:
 - wmi_check/**/*
 integration/yarn:
 - yarn/**/*
+integration/zeek:
+- zeek/**/*
+integration/zero_networks:
+- zero_networks/**/*
 integration/zk:
 - zk/**/*
-release:
+qa/skip-qa:
+- '**/__about__.py'
 - requirements-agent-release.txt
-- '*/__about__.py'
+- '*/CHANGELOG.md'
+release:
+- '**/__about__.py'

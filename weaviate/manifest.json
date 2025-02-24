@@ -8,14 +8,23 @@
     "configuration": "README.md#Setup",
     "support": "README.md#Support",
     "changelog": "CHANGELOG.md",
-    "description": "Weaviate",
+    "description": "Open-source vector database for building AI-powered applications.",
     "title": "Weaviate",
     "media": [],
     "classifier_tags": [
       "Category::AI/ML",
+      "Category::Data Stores",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Submitted Data Type::Metrics",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/ai-integrations/"
+      }
     ]
   },
   "assets": {
@@ -36,11 +45,14 @@
         "metadata_path": "assets/service_checks.json"
       },
       "process_signatures": [
+        "weaviate",
         "/bin/weaviate"
-      ]
+      ],
+      "source_type_id": 10371,
+      "auto_install": true
     },
     "monitors": {
-      "node_status": "assets/monitors/node_status.json"
+      "Weaviate Node in unhealthy state": "assets/monitors/node_status.json"
     },
     "dashboards": {
       "Weaviate Overview Dashboard": "assets/dashboards/overview_dashboard.json"
@@ -51,6 +63,5 @@
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

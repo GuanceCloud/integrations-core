@@ -11,25 +11,28 @@ from datadog_checks.dev.utils import get_metadata_metrics
 
 from .common import EXPECTED_METRICS
 
-pytestmark = [pytest.mark.unit]
 
-
-def test_critical_service_check(dd_run_check, aggregator):
+def test_critical_service_check(dd_run_check, aggregator, mock_http_response, check):
     """
     When we can't connect to dcgm-exporter for whatever reason we should only submit a CRITICAL service check.
     """
-    check = DcgmCheck(
-        'dcgm',
-        {},
-        [
-            {
-                'openmetrics_endpoint': 'http://localhost:5555/metrics',
-            }
-        ],
-    )
-    with pytest.raises(Exception, match="requests.exceptions.ConnectionError"):
+    mock_http_response(status_code=404)
+    with pytest.raises(Exception, match="requests.exceptions.HTTPError"):
         dd_run_check(check)
     aggregator.assert_service_check('dcgm.openmetrics.health', status=check.CRITICAL)
+
+
+@pytest.mark.usefixtures("mock_label_remap")
+def test_label_remap(dd_run_check, aggregator, check):
+    """
+    Test that the labels are remapped correctly.
+    """
+    dd_run_check(check)
+    aggregator.assert_service_check('dcgm.openmetrics.health', DcgmCheck.OK)
+    relabeled_tags = ['kube_namespace:foo', 'pod_name:bar', 'kube_container_name:baz']
+    aggregator.assert_metric('dcgm.gpu_utilization')
+    for tag in relabeled_tags:
+        aggregator.assert_metric_has_tag('dcgm.gpu_utilization', tag)
 
 
 @pytest.mark.usefixtures("mock_metrics")

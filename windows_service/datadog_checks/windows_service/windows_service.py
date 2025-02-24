@@ -7,7 +7,6 @@ import re
 import pywintypes
 import win32service
 import winerror
-from six import raise_from
 
 from datadog_checks.base import AgentCheck
 
@@ -42,7 +41,7 @@ class ServiceFilter(object):
                 pattern = self.name
                 self._name_re = re.compile(pattern, SERVICE_PATTERN_FLAGS)
         except re.error as e:
-            raise_from(Exception("Regular expression syntax error in '{}': {}".format(pattern, str(e))), None)
+            raise Exception("Regular expression syntax error in '{}': {}".format(pattern, str(e))) from None
 
     def match(self, service_view):
         if self.name is not None:
@@ -115,6 +114,7 @@ class ServiceView(object):
     }
     STARTUP_TYPE_DELAYED_AUTO = "automatic_delayed_start"
     STARTUP_TYPE_UNKNOWN = "unknown"
+    DISPLAY_NAME_UNKNOWN = "Not_Found"
 
     def __init__(self, scm_handle, name):
         self.scm_handle = scm_handle
@@ -250,7 +250,16 @@ class WindowsService(AgentCheck):
 
         service_statuses = win32service.EnumServicesStatus(scm_handle, type_filter, state_filter)
 
-        for short_name, _, service_status in service_statuses:
+        # Sort service filters in reverse order on the regex pattern so more specific (longer)
+        # regex patterns are tested first. This is to handle cases when a pattern is a prefix of
+        # another pattern.
+        # Service filters without a name field don't report UNKNOWN, but if they match a service
+        # before a filter with a name then the name filter may report UNKONWN. Reverse sorting on
+        # the length prevents this by putting service filters without a name last in the list.
+        # See test_name_regex_order()
+        service_filters = sorted(service_filters, reverse=True, key=lambda x: len(x.name or ""))
+
+        for short_name, display_name, service_status in service_statuses:
             service_view = ServiceView(scm_handle, short_name)
 
             if 'ALL' not in services:
@@ -276,6 +285,9 @@ class WindowsService(AgentCheck):
             tags = ['windows_service:{}'.format(short_name)]
             tags.extend(custom_tags)
 
+            if instance.get('collect_display_name_as_tag', False):
+                tags.append('display_name:{}'.format(display_name))
+
             if instance.get('windows_service_startup_type_tag', False):
                 try:
                     tags.append('windows_service_startup_type:{}'.format(service_view.startup_type_string()))
@@ -296,14 +308,16 @@ class WindowsService(AgentCheck):
             for service in services_unseen:
                 # if a name doesn't match anything (wrong name or no permission to access the service), report UNKNOWN
                 status = self.UNKNOWN
-                startup_type_string = ServiceView.STARTUP_TYPE_UNKNOWN
 
                 tags = ['windows_service:{}'.format(service)]
 
                 tags.extend(custom_tags)
 
                 if instance.get('windows_service_startup_type_tag', False):
-                    tags.append('windows_service_startup_type:{}'.format(startup_type_string))
+                    tags.append('windows_service_startup_type:{}'.format(ServiceView.STARTUP_TYPE_UNKNOWN))
+
+                if instance.get('collect_display_name_as_tag', False):
+                    tags.append('display_name:{}'.format(ServiceView.DISPLAY_NAME_UNKNOWN))
 
                 if not instance.get('disable_legacy_service_tag', False):
                     self._log_deprecation('service_tag', 'windows_service')

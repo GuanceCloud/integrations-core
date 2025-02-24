@@ -2,15 +2,115 @@
 
 <!-- towncrier release notes start -->
 
+## 8.2.0 / 2025-01-16 / Agent 7.63.0
+
 ***Added***:
 
-* Add support for configuring what resources to collect events from ([#15992](https://github.com/DataDog/integrations-core/pull/15992))
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 8.1.0 / 2024-11-20 / Agent 7.61.0
+
+***Added***:
+
+* Added support for vSAN metric/event collection in the vSphere integration ([#18117](https://github.com/DataDog/integrations-core/pull/18117))
+
+## 8.0.1 / 2024-10-31 / Agent 7.60.0
+
+***Fixed***:
+
+* Add debug log line for host tags. ([#18774](https://github.com/DataDog/integrations-core/pull/18774))
+
+## 8.0.0 / 2024-09-25 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+* Added the hostname_transform config option ([#18652](https://github.com/DataDog/integrations-core/pull/18652))
+
+***Fixed***:
+
+* Fixed excluded host tags for property metrics ([#18601](https://github.com/DataDog/integrations-core/pull/18601))
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 7.7.0 / 2024-10-01 / 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 7.6.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Adding an include_events config option to vSphere ([#17855](https://github.com/DataDog/integrations-core/pull/17855))
+* Added more events/resource to be filtered in vSphere with event_resource_filters ([#17917](https://github.com/DataDog/integrations-core/pull/17917))
+* Update dependencies ([#17953](https://github.com/DataDog/integrations-core/pull/17953))
+
+## 7.5.3 / 2024-05-31 / Agent 7.55.0
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 7.5.2 / 2024-04-26 / Agent 7.54.0
+
+***Fixed***:
+
+* Only collect property metrics for resources that support it and lower level for log line ([#17446](https://github.com/DataDog/integrations-core/pull/17446))
+
+## 7.5.1 / 2024-04-17
+
+***Fixed***:
+
+* Add additional tags on events for non-host resources. ([#17403](https://github.com/DataDog/integrations-core/pull/17403))
+
+## 7.5.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Collect a new vSphere metric: cpu.usage.vcpus.avg ([#17087](https://github.com/DataDog/integrations-core/pull/17087))
+
+***Fixed***:
+
+* Add `ssl_cafile` config. ([#16903](https://github.com/DataDog/integrations-core/pull/16903))
+
+## 7.4.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Update pyvmomi to 8.0.2.0.1 ([#16542](https://github.com/DataDog/integrations-core/pull/16542))
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+
+## 7.3.0 / 2023-12-11 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+***Fixed***:
+
+* Fix error in property metric collection when an intermediate attribute is not defined ([#16296](https://github.com/DataDog/integrations-core/pull/16296))
+* Fix typo in log line ([#16314](https://github.com/DataDog/integrations-core/pull/16314))
+* Submit boolean properties as metric values ([#16315](https://github.com/DataDog/integrations-core/pull/16315))
+* Use correct size parameters when creating batches ([#16380](https://github.com/DataDog/integrations-core/pull/16380))
+
+## 7.2.0 / 2023-11-07 / Agent 7.50.0
+
+***Added***:
+
+* Add support for configuring what resources to collect events for. ([#15992](https://github.com/DataDog/integrations-core/pull/15992))
 
 ## 7.1.0 / 2023-09-29 / Agent 7.49.0
 
 ***Added***:
 
 * Decouple resource groups and collection type ([#15670](https://github.com/DataDog/integrations-core/pull/15670))
+    * _Note:_ When updating to this version, note that VMs are now considered historical entities. If you are using an instance to only collect historical entities, review your configuration to ensure you are handling VMs.
 
 ***Fixed***:
 

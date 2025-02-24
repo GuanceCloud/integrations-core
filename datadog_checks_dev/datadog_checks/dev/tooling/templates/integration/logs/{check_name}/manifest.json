@@ -8,7 +8,7 @@
     "configuration": "README.md#Setup",
     "support": "README.md#Support",
     "changelog": "CHANGELOG.md",
-    "description": "",
+    "description": "{description}",
     "title": "{integration_name}",
     "media": [],
     "classifier_tags": [
@@ -20,6 +20,8 @@
   }},
   "assets": {{
     "integration": {{
+      "auto_install": {auto_install},
+      "source_type_id": {source_type_id},
       "source_type_name": "{integration_name}",
       "configuration": {{
         "spec": "assets/configuration/spec.yaml"
@@ -33,8 +35,6 @@
     }},
     "dashboards": {{}},
     "monitors": {{}},
-    "logs": {{}},
     "saved_views": {{}}
   }},{pricing_plan}{terms}{author_info}
-  "oauth": {{}}
 }}

@@ -15,7 +15,8 @@
       "Supported OS::Linux",
       "Supported OS::macOS",
       "Category::Data Stores",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -24,7 +25,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "PGBouncer",
@@ -42,7 +42,11 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["pgbouncer"]
+      "process_signatures": [
+        "pgbouncer"
+      ],
+      "source_type_id": 118,
+      "auto_install": true
     },
     "dashboards": {
       "pgbouncer": "assets/dashboards/pgbouncer_dashboard.json"
@@ -52,9 +56,6 @@
       "instance_overview": "assets/saved_views/instance_overview.json",
       "user_overview": "assets/saved_views/user_overview.json",
       "pgbouncer_processes": "assets/saved_views/pgbouncer_processes.json"
-    },
-    "logs": {
-      "source": "pgbouncer"
     }
   }
 }

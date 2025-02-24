@@ -2,6 +2,74 @@
 
 <!-- towncrier release notes start -->
 
+## 6.2.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 6.1.0 / 2025-01-16
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 6.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 5.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 4.1.0 / 2024-09-06
+
+***Added***:
+
+* Bump hazalcast-python-client version for Python 3.12 support ([#18520](https://github.com/DataDog/integrations-core/pull/18520))
+
+## 4.0.0 / 2024-09-05
+
+***Changed***:
+
+* Drop name from excluded tags.
+  Updated Hazelcast and Management Center to use version 5.x.
+  Updated the status to reflect health of Management Center (Not Hazelcast cluster state). ([#17367](https://github.com/DataDog/integrations-core/pull/17367))
+
+***Added***:
+
+* Added metrics for queues, topics and reliable topics. ([#17367](https://github.com/DataDog/integrations-core/pull/17367))
+
+## 3.2.1 / 2024-05-31 / Agent 7.55.0
+
+***Fixed***:
+
+* Update the description for the `tls_ca_cert` config option to use `openssl rehash` instead of `c_rehash` ([#16981](https://github.com/DataDog/integrations-core/pull/16981))
+
+## 3.2.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Update the configuration file to include the new oauth options parameter ([#16835](https://github.com/DataDog/integrations-core/pull/16835))
+
+## 3.1.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
 ## 3.0.0 / 2023-08-10 / Agent 7.48.0
 
 ***Changed***:

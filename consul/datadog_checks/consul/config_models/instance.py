@@ -98,6 +98,7 @@ class InstanceConfig(BaseModel):
     timeout: Optional[float] = None
     tls_ca_cert: Optional[str] = None
     tls_cert: Optional[str] = None
+    tls_ciphers: Optional[tuple[str, ...]] = None
     tls_ignore_warning: Optional[bool] = None
     tls_private_key: Optional[str] = None
     tls_protocols_allowed: Optional[tuple[str, ...]] = None
@@ -105,6 +106,7 @@ class InstanceConfig(BaseModel):
     tls_verify: Optional[bool] = None
     url: str
     use_legacy_auth_encoding: Optional[bool] = None
+    use_node_name_as_hostname: Optional[bool] = None
     use_prometheus_endpoint: Optional[bool] = None
     username: Optional[str] = None
 

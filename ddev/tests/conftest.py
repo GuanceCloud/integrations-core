@@ -20,6 +20,7 @@ from ddev.e2e.constants import E2EEnvVars
 from ddev.repo.core import Repository
 from ddev.utils.ci import running_in_ci
 from ddev.utils.fs import Path, temp_directory
+from ddev.utils.github import GitHubManager
 from ddev.utils.platform import Platform
 
 PLATFORM = Platform()
@@ -95,6 +96,16 @@ def valid_integrations(local_repo) -> list[str]:
 
 
 @pytest.fixture
+def github_manager(local_repo, config_file, terminal) -> GitHubManager:
+    return GitHubManager(
+        Repository(local_repo.name, str(local_repo)),
+        user=config_file.model.github.user,
+        token=config_file.model.github.token,
+        status=terminal.status,
+    )
+
+
+@pytest.fixture
 def valid_integration(valid_integrations) -> str:
     return random.choice(valid_integrations)
 
@@ -106,7 +117,7 @@ def config_file(tmp_path, monkeypatch, local_repo) -> ConfigFile:
         'DD_ENV',
         'DD_SERVICE',
         'DD_SITE',
-        'DD_LOGS_CONFIG_DD_URL',
+        'DD_LOGS_CONFIG_LOGS_DD_URL',
         'DD_DD_URL',
         'DD_API_KEY',
         'DD_APP_KEY',
@@ -235,19 +246,19 @@ def helpers():
 def pytest_runtest_setup(item):
     for marker in item.iter_markers():
         if marker.name == 'requires_ci' and not running_in_ci():  # no cov
-            pytest.skip('Not running in CI')
+            pytest.skip('Only running in CI')
 
         if marker.name == 'requires_windows' and not PLATFORM.windows:
-            pytest.skip('Not running on Windows')
+            pytest.skip('Only running on Windows')
 
         if marker.name == 'requires_macos' and not PLATFORM.macos:
-            pytest.skip('Not running on macOS')
+            pytest.skip('Only running on macOS')
 
         if marker.name == 'requires_linux' and not PLATFORM.linux:
-            pytest.skip('Not running on Linux')
+            pytest.skip('Only running on Linux')
 
         if marker.name == 'requires_unix' and PLATFORM.windows:
-            pytest.skip('Not running on a Linux-based platform')
+            pytest.skip('Only running on a Linux-based platform')
 
 
 def pytest_configure(config):

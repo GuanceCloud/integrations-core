@@ -5,6 +5,8 @@ import copy
 import os
 import socket
 
+from confluent_kafka.admin import AdminClient
+
 from datadog_checks.dev import get_docker_hostname
 from datadog_checks.dev.utils import get_metadata_metrics
 
@@ -34,15 +36,7 @@ E2E_METADATA = {
     'docker_volumes': [
         f'{HERE}/docker/ssl/certificate:/tmp/certificate',
         f'{HERE}/docker/kerberos/kdc/krb5_agent.conf:/etc/krb5.conf',
-        f'{HERE}/docker/scripts/install_librdkafka.bash:/tmp/install_librdkafka.bash',
     ],
-    'start_commands': [
-        'bash /tmp/install_librdkafka.bash',
-    ],
-    'env_vars': {
-        'LIBRDKAFKA_VERSION': os.environ["LIBRDKAFKA_VERSION"],
-        'CONFLUENT_KAFKA_VERSION': os.environ["CONFLUENT_KAFKA_VERSION"],
-    },
 }
 
 if AUTHENTICATION == "ssl":
@@ -85,20 +79,33 @@ elif AUTHENTICATION == "kerberos":
     E2E_INSTANCE["sasl_kerberos_keytab"] = "/var/lib/secret/localhost.key"
 
 
+def get_cluster_id():
+    config = {
+        "bootstrap.servers": INSTANCE['kafka_connect_str'],
+        "socket.timeout.ms": 1000,
+        "topic.metadata.refresh.interval.ms": 2000,
+    }
+    config.update(get_authentication_configuration(INSTANCE))
+    client = AdminClient(config)
+    return client.list_topics(timeout=5).cluster_id
+
+
 def assert_check_kafka(aggregator, consumer_groups):
+    cluster_id = get_cluster_id()
     for name, consumer_group in consumer_groups.items():
         for topic, partitions in consumer_group.items():
             for partition in partitions:
-                tags = [f"topic:{topic}", f"partition:{partition}"] + ['optional:tag1']
+                tags = [f"topic:{topic}", f"partition:{partition}", "kafka_cluster_id:" + cluster_id] + [
+                    'optional:tag1'
+                ]
                 for mname in BROKER_METRICS:
                     aggregator.assert_metric(mname, tags=tags, count=1)
 
                 for mname in CONSUMER_METRICS:
-                    aggregator.assert_metric(
-                        mname,
-                        tags=tags + [f"consumer_group:{name}"],
-                        count=1,
-                    )
+                    aggregator.assert_metric(mname)
+                    tags = tags + [f"consumer_group:{name}"]
+                    for tag in tags:
+                        aggregator.assert_metric_has_tag(mname, tag)
 
     aggregator.assert_all_metrics_covered()
     aggregator.assert_metrics_using_metadata(get_metadata_metrics())

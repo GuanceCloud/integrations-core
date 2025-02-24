@@ -2,6 +2,62 @@
 
 <!-- towncrier release notes start -->
 
+## 6.1.0 / 2025-01-16 / Agent 7.63.0
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 6.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 5.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 4.6.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 4.5.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Update custom_queries configuration to support optional collection_interval ([#16957](https://github.com/DataDog/integrations-core/pull/16957))
+
+***Fixed***:
+
+* Document the `metric_prefix` option for custom queries ([#17061](https://github.com/DataDog/integrations-core/pull/17061))
+* Update the configuration to include the `metric_prefix` option ([#17065](https://github.com/DataDog/integrations-core/pull/17065))
+
+## 4.4.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Update dependencies ([#16394](https://github.com/DataDog/integrations-core/pull/16394)), ([#16502](https://github.com/DataDog/integrations-core/pull/16502))
+
+## 4.3.0 / 2023-11-10 / Agent 7.50.0
+
+***Added***:
+
+* Updated dependencies. ([#16154](https://github.com/DataDog/integrations-core/pull/16154))
+
 ## 4.2.0 / 2023-09-29 / Agent 7.49.0
 
 ***Added***:

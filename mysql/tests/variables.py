@@ -25,6 +25,8 @@ STATUS_VARS = [
     # Table Cache Metrics
     'mysql.performance.open_files',
     'mysql.performance.open_tables',
+    # Performance schema metrics
+    'mysql.performance.performance_schema_digest_lost',
     # Network Metrics
     'mysql.performance.bytes_sent',
     'mysql.performance.bytes_received',
@@ -90,6 +92,7 @@ INNODB_VARS = [
     'mysql.innodb.buffer_pool_read_requests',
     'mysql.innodb.buffer_pool_reads',
     'mysql.innodb.buffer_pool_utilization',
+    'mysql.innodb.deadlocks',
 ]
 
 COMPLEX_INNODB_VARS = [
@@ -266,12 +269,24 @@ GROUP_REPLICATION_VARS = [
     'mysql.replication.group.member_status',
     'mysql.replication.group.conflicts_detected',
     'mysql.replication.group.transactions',
-    'mysql.replication.group.transactions_applied',
-    'mysql.replication.group.transactions_in_applier_queue',
     'mysql.replication.group.transactions_check',
+    'mysql.replication.group.transactions_validating',
+]
+
+GROUP_REPLICATION_VARS_8_0_2 = [
+    'mysql.replication.group.transactions_in_applier_queue',
+    'mysql.replication.group.transactions_applied',
     'mysql.replication.group.transactions_proposed',
     'mysql.replication.group.transactions_rollback',
-    'mysql.replication.group.transactions_validating',
+]
+
+INDEX_SIZE_VARS = [
+    'mysql.index.size',
+]
+INDEX_USAGE_VARS = [
+    'mysql.index.reads',
+    'mysql.index.updates',
+    'mysql.index.deletes',
 ]
 
 SIMPLE_OPERATION_TIME_METRICS = [

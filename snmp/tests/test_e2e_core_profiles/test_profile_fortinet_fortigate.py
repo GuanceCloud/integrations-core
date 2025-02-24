@@ -30,8 +30,11 @@ def test_e2e_profile_fortinet_fortigate(dd_agent_check):
     common_tags = [
         'snmp_profile:fortinet-fortigate',
         'snmp_host:fortinet-fortigate.device.name',
+        'device_hostname:fortinet-fortigate.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
         'device_vendor:fortinet',
     ] + []
 
@@ -156,6 +159,8 @@ def test_e2e_profile_fortinet_fortigate(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.12356.101.1.1',
         'vendor': 'fortinet',
         'version': 'v5.6.4,build1575b1575,180425 (GA)',
+        'device_type': 'other',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

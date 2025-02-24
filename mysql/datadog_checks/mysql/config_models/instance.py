@@ -51,7 +51,9 @@ class CustomQuery(BaseModel):
         arbitrary_types_allowed=True,
         frozen=True,
     )
+    collection_interval: Optional[int] = None
     columns: Optional[tuple[MappingProxyType[str, Any], ...]] = None
+    metric_prefix: Optional[str] = None
     query: Optional[str] = None
     tags: Optional[tuple[str, ...]] = None
 
@@ -63,6 +65,15 @@ class Gcp(BaseModel):
     )
     instance_id: Optional[str] = None
     project_id: Optional[str] = None
+
+
+class IndexMetrics(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    collection_interval: Optional[float] = None
+    enabled: Optional[bool] = None
 
 
 class MetricPatterns(BaseModel):
@@ -83,7 +94,14 @@ class ObfuscatorOptions(BaseModel):
     collect_comments: Optional[bool] = None
     collect_metadata: Optional[bool] = None
     collect_tables: Optional[bool] = None
+    keep_boolean: Optional[bool] = None
+    keep_identifier_quotation: Optional[bool] = None
+    keep_null: Optional[bool] = None
+    keep_positional_parameter: Optional[bool] = None
     keep_sql_alias: Optional[bool] = None
+    keep_trailing_semicolon: Optional[bool] = None
+    obfuscation_mode: Optional[str] = None
+    remove_space_between_parentheses: Optional[bool] = None
     replace_digits: Optional[bool] = None
 
 
@@ -122,6 +140,7 @@ class QueryMetrics(BaseModel):
     )
     collection_interval: Optional[float] = None
     enabled: Optional[bool] = None
+    only_query_recent_statements: Optional[bool] = None
 
 
 class QuerySamples(BaseModel):
@@ -142,6 +161,16 @@ class QuerySamples(BaseModel):
     fully_qualified_explain_procedure: Optional[str] = None
     samples_per_hour_per_query: Optional[int] = None
     seen_samples_cache_maxsize: Optional[int] = None
+
+
+class SchemasCollection(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    collection_interval: Optional[float] = None
+    enabled: Optional[bool] = None
+    max_execution_time: Optional[float] = None
 
 
 class Ssl(BaseModel):
@@ -176,6 +205,7 @@ class InstanceConfig(BaseModel):
     empty_default_hostname: Optional[bool] = None
     gcp: Optional[Gcp] = None
     host: Optional[str] = None
+    index_metrics: Optional[IndexMetrics] = None
     log_unobfuscated_plans: Optional[bool] = None
     log_unobfuscated_queries: Optional[bool] = None
     max_custom_queries: Optional[int] = None
@@ -186,11 +216,14 @@ class InstanceConfig(BaseModel):
     options: Optional[Options] = None
     password: Optional[str] = None
     port: Optional[float] = None
+    propagate_agent_tags: Optional[bool] = None
     queries: Optional[tuple[MappingProxyType[str, Any], ...]] = None
     query_activity: Optional[QueryActivity] = None
     query_metrics: Optional[QueryMetrics] = None
     query_samples: Optional[QuerySamples] = None
+    read_timeout: Optional[float] = None
     reported_hostname: Optional[str] = None
+    schemas_collection: Optional[SchemasCollection] = None
     service: Optional[str] = None
     sock: Optional[str] = None
     ssl: Optional[Ssl] = None

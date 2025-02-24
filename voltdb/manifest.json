@@ -16,7 +16,8 @@
       "Supported OS::macOS",
       "Supported OS::Windows",
       "Category::Data Stores",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "VoltDB",
@@ -43,19 +43,20 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["voltdb"]
+      "process_signatures": [
+        "voltdb"
+      ],
+      "source_type_id": 10149,
+      "auto_install": true
     },
     "dashboards": {
       "VoltDB - Overview": "assets/dashboards/voltdb_overview.json"
     },
     "monitors": {
-      "CPU load": "assets/monitors/cpu_load.json"
+      "Voltdb Node CPU is high": "assets/monitors/cpu_load.json"
     },
     "saved_views": {
       "voltdb_processes": "assets/saved_views/voltdb_processes.json"
-    },
-    "logs": {
-      "source": "voltdb"
     }
   }
 }

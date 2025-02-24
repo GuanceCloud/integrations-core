@@ -27,8 +27,11 @@ def test_e2e_profile_zebra_printer(dd_agent_check):
     common_tags = [
         'snmp_profile:zebra-printer',
         'snmp_host:zebra-printer.device.name',
+        'device_hostname:zebra-printer.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ] + []
 
     # --- TEST EXTENDED METRICS ---
@@ -61,6 +64,8 @@ def test_e2e_profile_zebra_printer(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.10642.1.1',
         'vendor': 'zebra',
         'version': 'P430i V2.00.00',
+        'device_type': 'printer',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

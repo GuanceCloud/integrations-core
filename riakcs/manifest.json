@@ -15,7 +15,14 @@
       "Supported OS::Linux",
       "Supported OS::macOS",
       "Supported OS::Windows",
-      "Category::Data Stores"
+      "Category::Data Stores",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-riak-cs-performance-and-availability"
+      }
     ]
   },
   "author": {
@@ -24,7 +31,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "RiakCS",
@@ -42,7 +48,11 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["riak-cs start"]
+      "process_signatures": [
+        "riak-cs start"
+      ],
+      "source_type_id": 110,
+      "auto_install": true
     },
     "dashboards": {
       "riakcs": "assets/dashboards/riakcs_dashboard.json"

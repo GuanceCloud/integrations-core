@@ -20,6 +20,7 @@ PERCENT_METRICS = {
     'cpu.latency.avg',
     'cpu.readiness.avg',
     'cpu.usage.avg',
+    'cpu.usage.vcpus.avg',
     'cpu.utilization.avg',
     'datastore.siocActiveTimePercentage.avg',
     'disk.capacity.contention.avg',
@@ -63,6 +64,13 @@ PERCENT_METRICS = {
     'vsanDomObj.readCacheHitRate.latest',
 }
 
+VSAN_PERCENT_METRICS = {
+    'congestion',
+    'coreUtilPct',
+    'pcpuUsedPct',
+    'pcpuUtilPct',
+}
+
 # All metrics that can be collected from VirtualMachines.
 VM_METRICS = {
     REALTIME: [
@@ -80,6 +88,7 @@ VM_METRICS = {
         'cpu.swapwait.sum',
         'cpu.system.sum',
         'cpu.usage.avg',
+        'cpu.usage.vcpus.avg',
         'cpu.usagemhz.avg',
         'cpu.used.sum',
         'cpu.wait.sum',
@@ -401,6 +410,90 @@ HOST_METRICS = {
     HISTORICAL: [],
 }
 
+VSAN_CLUSTER_METRICS = {
+    'vsan.cluster.congestion',
+    'vsan.cluster.dedupRatio',
+    'vsan.cluster.free',
+    'vsan.cluster.health.count',
+    'vsan.cluster.health.statsdb.count',
+    'vsan.cluster.health.masterexist.count',
+    'vsan.cluster.health.collection.count',
+    'vsan.cluster.health.hostsmissing.count',
+    'vsan.cluster.health.renameddirs.count',
+    'vsan.cluster.iopsRead',
+    'vsan.cluster.iopsWrite',
+    'vsan.cluster.latencyAvgRead',
+    'vsan.cluster.latencyAvgWrite',
+    'vsan.cluster.oio',
+    'vsan.cluster.savedByDedup',
+    'vsan.cluster.throughputRead',
+    'vsan.cluster.throughputWrite',
+    'vsan.cluster.total',
+    'vsan.cluster.used',
+}
+
+
+VSAN_HOST_METRICS = {
+    'vsan.host.clientCacheHitRate',
+    'vsan.host.clientCacheHits',
+    'vsan.host.congestion',
+    'vsan.host.coreUtilPct',
+    'vsan.host.iopsRead',
+    'vsan.host.iopsUnmap',
+    'vsan.host.iopsWrite',
+    'vsan.host.latencyAvgRead',
+    'vsan.host.latencyAvgUnmap',
+    'vsan.host.latencyAvgWrite',
+    'vsan.host.oio',
+    'vsan.host.pcpuUsedPct',
+    'vsan.host.pcpuUtilPct',
+    'vsan.host.readCount',
+    'vsan.host.throughputRead',
+    'vsan.host.throughputUnmap',
+    'vsan.host.throughputWrite',
+    'vsan.host.writeCount',
+}
+
+CLUSTER_DOMCLIENT = {
+    'iopsRead',
+    'throughputRead',
+    'latencyAvgRead',
+    'iopsWrite',
+    'throughputWrite',
+    'latencyAvgWrite',
+    'congestion',
+    'oio',
+}
+
+VSAN_CLUSTER_CAPACITY = {'total', 'used', 'free', 'savedByDedup', 'dedupRatio'}
+
+HOST_DOMCLIENT = {
+    'iopsRead',
+    'throughputRead',
+    'latencyAvgRead',
+    'readCount',
+    'iopsWrite',
+    'throughputWrite',
+    'latencyAvgWrite',
+    'writeCount',
+    'congestion',
+    'oio',
+    'clientCacheHits',
+    'clientCacheHitRate',
+    'iopsUnmap',
+    'throughputUnmap',
+    'latencyAvgUnmap',
+}
+
+HOST_CPU = {'coreUtilPct', 'pcpuUtilPct', 'pcpuUsedPct'}
+
+ENTITY_REMAPPER = {
+    'cluster-domclient:': CLUSTER_DOMCLIENT,
+    'vsan-cluster-capacity:': VSAN_CLUSTER_CAPACITY,
+    'host-domclient:': HOST_DOMCLIENT,
+    'host-cpu:': HOST_CPU,
+}
+
 # All metrics that can be collected from Datastores.
 DATASTORE_METRICS = {
     REALTIME: [],
@@ -422,6 +515,11 @@ DATASTORE_METRICS = {
         'disk.unshared.latest',
         'disk.used.latest',
     ],
+}
+
+ALLOWED_METRICS_FOR_VSAN = {
+    'cluster': VSAN_CLUSTER_METRICS,
+    'host': VSAN_HOST_METRICS,
 }
 
 # All metrics that can be collected from Datacenters.

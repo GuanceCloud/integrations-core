@@ -3,8 +3,9 @@
 # Licensed under Simplified BSD License (see LICENSE)
 from __future__ import division
 
+from ipaddress import IPv6Address
+
 import bmemcached
-from six import iteritems, itervalues
 
 from datadog_checks.base import AgentCheck, ConfigurationError
 
@@ -111,7 +112,7 @@ class Memcache(AgentCheck):
         if len(response) != 1:
             raise BadResponseError("Malformed response: {}".format(response))
 
-        stats = list(itervalues(response))[0]
+        stats = list(response.values())[0]
         if not len(stats):
             raise BadResponseError("Malformed response for host: {}".format(stats))
 
@@ -176,8 +177,15 @@ class Memcache(AgentCheck):
         except BadResponseError:
             raise
 
+    def _is_ipv6(self, address):
+        try:
+            IPv6Address(address)
+            return True
+        except ValueError:
+            return False
+
     def _get_optional_metrics(self, client, tags, options=None):
-        for arg, metrics_args in iteritems(self.OPTIONAL_STATS):
+        for arg, metrics_args in self.OPTIONAL_STATS.items():
             if not options or options.get(arg, False):
                 try:
                     optional_rates = metrics_args[0]
@@ -187,7 +195,7 @@ class Memcache(AgentCheck):
                     stats = self._process_response(client.stats(arg))
                     prefix = "memcache.{}".format(arg)
 
-                    for metric, val in iteritems(stats):
+                    for metric, val in stats.items():
                         # Check if metric is a gauge or rate
                         metric_tags = []
                         if optional_fn:
@@ -257,6 +265,12 @@ class Memcache(AgentCheck):
 
         if not server and not socket:
             raise InvalidConfigError('Either "url" or "socket" must be configured')
+
+        if self._is_ipv6(server):
+            # When it is already enclosed, this code path is not executed.
+            # bmemcached requires IPv6 addresses to be enclosed in brackets,
+            # because we set port with IP address at the client initialization.
+            server = "[{}]".format(server)
 
         if socket:
             server = 'unix'

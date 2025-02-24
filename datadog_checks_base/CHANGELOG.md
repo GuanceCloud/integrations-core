@@ -2,6 +2,285 @@
 
 <!-- towncrier release notes start -->
 
+## 37.5.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+* Add tls_ciphers option for http ([#19469](https://github.com/DataDog/integrations-core/pull/19469))
+
+***Fixed***:
+
+* Handle unexpected values for `expires_in` in OAuth Access response ([#19371](https://github.com/DataDog/integrations-core/pull/19371))
+* Drop unused importlib-metadata dependency. ([#19382](https://github.com/DataDog/integrations-core/pull/19382))
+
+## 37.4.0 / 2025-01-16
+
+***Added***:
+
+* Allow for Ciphers to be customizable in the SSLContext creation ([#19312](https://github.com/DataDog/integrations-core/pull/19312))
+
+## 37.3.0 / 2024-12-26 / Agent 7.62.0
+
+***Security***:
+
+* Add FIPS switch ([#19179](https://github.com/DataDog/integrations-core/pull/19179))
+
+***Added***:
+
+* Show diff to closest metric match when metric test fails ([#18975](https://github.com/DataDog/integrations-core/pull/18975))
+* Use `time_elapsed` metric type for process start time and last GC time metrics ([#19309](https://github.com/DataDog/integrations-core/pull/19309))
+
+***Fixed***:
+
+* Fix "no snapshot data found" error when `agent check <check> --profile-memory` ([#19197](https://github.com/DataDog/integrations-core/pull/19197))
+
+## 37.2.0 / 2024-12-05 / Agent 7.60.0
+
+***Added***:
+
+* Bump binary package version for py3.12 ([#19190](https://github.com/DataDog/integrations-core/pull/19190))
+
+## 37.1.1 / 2024-11-28
+
+***Fixed***:
+
+* When resolving database hosts, always resolve a .local database host to itself ([#19039](https://github.com/DataDog/integrations-core/pull/19039))
+
+## 37.1.0 / 2024-10-04 / Agent 7.59.0
+
+***Added***:
+
+* Added Postgres cross-org telemetry metrics. ([#18758](https://github.com/DataDog/integrations-core/pull/18758))
+
+## 37.0.0 / 2024-09-19 / Agent 7.58.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+## 36.16.0 / 2024-09-30
+
+***Security***:
+
+* Bump version of cryptography to 43.0.1 to address vulnerability ([#18656](https://github.com/DataDog/integrations-core/pull/18656))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18207](https://github.com/DataDog/integrations-core/pull/18207))
+
+## 36.15.0 / 2024-09-05
+
+***Added***:
+
+* `utils.http.RequestsWrapper` accepts a session at initialization, useful for testing and controlling sessions in general. ([#18438](https://github.com/DataDog/integrations-core/pull/18438))
+* Bump ddtrace version to fix CouchDB tests ([#18451](https://github.com/DataDog/integrations-core/pull/18451))
+* Update dependencies ([#18478](https://github.com/DataDog/integrations-core/pull/18478))
+
+## 36.14.0 / 2024-08-19
+
+***Added***:
+
+* Update propagate_agent_tags to propagate all tags from the agent host. ([#18269](https://github.com/DataDog/integrations-core/pull/18269))
+
+***Fixed***:
+
+* Fix ddtrace import issues ([#18324](https://github.com/DataDog/integrations-core/pull/18324))
+
+## 36.13.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Combine streams to single pipe ([#18273](https://github.com/DataDog/integrations-core/pull/18273))
+* Bump the ddtrace version to 2.9.3 ([#18275](https://github.com/DataDog/integrations-core/pull/18275))
+* Add `log` transformer to the QueryManager ([#18278](https://github.com/DataDog/integrations-core/pull/18278))
+
+## 36.12.0 / 2024-08-06
+
+***Added***:
+
+* Enforce format of timestamp logs attribute ([#18218](https://github.com/DataDog/integrations-core/pull/18218))
+
+***Fixed***:
+
+* Ensures that 'should_bypass_proxy' correctly considers unix:/// URLs ([#18119](https://github.com/DataDog/integrations-core/pull/18119))
+
+## 36.11.0 / 2024-08-06
+
+***Added***:
+
+* Log invalid line when failing to parse OpenMetrics response ([#17514](https://github.com/DataDog/integrations-core/pull/17514))
+* Support log submission from checks ([#18019](https://github.com/DataDog/integrations-core/pull/18019))
+* Allow untyped metrics that we coerce to `counter` to be collected regardless if they have `_total` or not. ([#18054](https://github.com/DataDog/integrations-core/pull/18054))
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 36.10.0 / 2024-07-11
+
+***Added***:
+
+* [NDM] Add NDM metadata support for Cisco ACI ([#17735](https://github.com/DataDog/integrations-core/pull/17735))
+
+## 36.9.0 / 2024-07-05 / Agent 7.56.0
+
+***Security***:
+
+* Update pydantic to 2.7.3 to address CVE-2024-3772 ([#17802](https://github.com/DataDog/integrations-core/pull/17802))
+
+***Added***:
+
+* Update dependencies ([#17817](https://github.com/DataDog/integrations-core/pull/17817)), ([#17953](https://github.com/DataDog/integrations-core/pull/17953))
+
+***Fixed***:
+
+* Fix rate limiter in sync mode of DBMAsync job. Prior to this change, the DBMAsync job would not take into account the time of the job execution when throttling by the collection interval. ([#17893](https://github.com/DataDog/integrations-core/pull/17893))
+
+## 36.8.0 / 2024-06-13 / Agent 7.55.0
+
+***Added***:
+
+* Improve throttling in sync jobs of `DBMAsyncJob` class. Instead of putting a thread to sleep check if the job is too early to run. ([#17716](https://github.com/DataDog/integrations-core/pull/17716))
+
+## 36.7.1 / 2024-06-11
+
+***Fixed***:
+
+* Bump the `requests` version to 2.32.3 on Python 3 ([#17702](https://github.com/DataDog/integrations-core/pull/17702))
+
+## 36.7.0 / 2024-05-31
+
+***Added***:
+
+* Update dependencies ([#17424](https://github.com/DataDog/integrations-core/pull/17424)), ([#17519](https://github.com/DataDog/integrations-core/pull/17519))
+* Add TimedCache for controlled cache expiration. The TimedCache sets TTL on initialization and expires when TTL is reached. ([#17557](https://github.com/DataDog/integrations-core/pull/17557))
+* Add `obfuscate_mongodb_string` to datadog_agent stub ([#17597](https://github.com/DataDog/integrations-core/pull/17597))
+* Add dedicated module for the Agent interface ([#17667](https://github.com/DataDog/integrations-core/pull/17667))
+* Add option to use BoringSSL for all network requests ([#17669](https://github.com/DataDog/integrations-core/pull/17669))
+
+***Fixed***:
+
+* Revert pydantic bump to keep compatibility ([#17660](https://github.com/DataDog/integrations-core/pull/17660))
+
+## 36.6.0 / 2024-04-26 / Agent 7.54.0
+
+***Added***:
+
+* Update dependencies ([#17319](https://github.com/DataDog/integrations-core/pull/17319))
+* Upgrade boto dependencies ([#17332](https://github.com/DataDog/integrations-core/pull/17332))
+
+***Fixed***:
+
+* Undo pydantic upgrade to stay compatible with ddev. ([#17339](https://github.com/DataDog/integrations-core/pull/17339))
+
+## 36.5.1 / 2024-03-22 / Agent 7.53.0
+
+***Fixed***:
+
+* Pin requests-oauthlib for Py2 ([#17181](https://github.com/DataDog/integrations-core/pull/17181))
+
+## 36.5.0 / 2024-03-12
+
+***Added***:
+
+* Update dependencies ([#16899](https://github.com/DataDog/integrations-core/pull/16899)), ([#16963](https://github.com/DataDog/integrations-core/pull/16963))
+* Add a method in the aggregator to validate service checks based on the definition file ([#16916](https://github.com/DataDog/integrations-core/pull/16916))
+* support custom metric_prefix in QueryExecutor ([#16958](https://github.com/DataDog/integrations-core/pull/16958))
+* Add a method to assert several metric tags at once ([#17134](https://github.com/DataDog/integrations-core/pull/17134))
+* Add db util to prepand/append comma delimited SQL comment from key/value pairs ([#17145](https://github.com/DataDog/integrations-core/pull/17145))
+
+## 36.4.0 / 2024-03-08 / Agent 7.52.0
+
+***Added***:
+
+* Revert "Bump psutil version to 5.9.7 (#16547)" ([#17112](https://github.com/DataDog/integrations-core/pull/17112))
+
+## 36.3.0 / 2024-03-08
+
+***Added***:
+
+* Bump snowflake-connector-python to 3.7.1 ([#17099](https://github.com/DataDog/integrations-core/pull/17099))
+
+## 36.2.0 / 2024-03-07
+
+***Security***:
+
+* Bump orjson to 3.9.15 and cryptography to 42.0.5 ([#17054](https://github.com/DataDog/integrations-core/pull/17054))
+
+## 36.1.0 / 2024-02-16
+
+***Added***:
+
+* Support customizable collection interval per query in query executor ([#16765](https://github.com/DataDog/integrations-core/pull/16765))
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+* Add custom auth params for OAuth2 authentication ([#16812](https://github.com/DataDog/integrations-core/pull/16812))
+* Bump dependencies ([#16858](https://github.com/DataDog/integrations-core/pull/16858))
+
+***Fixed***:
+
+* [DBM] Minimize temporary objects  when merge duplicate statement metrics ([#16796](https://github.com/DataDog/integrations-core/pull/16796))
+
+## 36.0.0 / 2024-01-30
+
+***Removed***:
+
+* Drop scandir depedency for Python >= 3.5 ([#16702](https://github.com/DataDog/integrations-core/pull/16702))
+
+***Added***:
+
+* Update pyvmomi to 8.0.2.0.1 ([#16542](https://github.com/DataDog/integrations-core/pull/16542))
+* Bump `psutil` version to 5.9.7 ([#16547](https://github.com/DataDog/integrations-core/pull/16547))
+* Bump `openstacksdk` version to 2.0.0 ([#16549](https://github.com/DataDog/integrations-core/pull/16549))
+* Bump `pymongo` version to 4.6.1 ([#16554](https://github.com/DataDog/integrations-core/pull/16554))
+* Bump `service-identity` version to 23.1.0 ([#16558](https://github.com/DataDog/integrations-core/pull/16558))
+* Bump `pycryptodomex` version to 3.19.1 ([#16560](https://github.com/DataDog/integrations-core/pull/16560))
+* Bump `protobuf` version to 4.25.1 ([#16573](https://github.com/DataDog/integrations-core/pull/16573))
+
+***Fixed***:
+
+* Remove unused dependencies in the Agent file ([#16538](https://github.com/DataDog/integrations-core/pull/16538))
+* [DBMON-3495] Add `replace_null_character` option to replace embedded null characters with empty string in query text ([#16742](https://github.com/DataDog/integrations-core/pull/16742))
+
+## 35.0.1 / 2024-02-07 / Agent 7.51.0
+
+***Fixed***:
+
+* [DBMON-3495] Add `replace_null_character` option to replace embedded null characters with empty string in query text ([#16742](https://github.com/DataDog/integrations-core/pull/16742))
+
+## 35.0.0 / 2024-01-05
+
+***Removed***:
+
+* remove pyro4 and serpent dependencies ([#16269](https://github.com/DataDog/integrations-core/pull/16269))
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Bump the snowflake version to 3.5.0 ([#16324](https://github.com/DataDog/integrations-core/pull/16324))
+* Update dependencies ([#16394](https://github.com/DataDog/integrations-core/pull/16394)), ([#16448](https://github.com/DataDog/integrations-core/pull/16448)), ([#16502](https://github.com/DataDog/integrations-core/pull/16502))
+* conditionally enable memory profile for DBMAsyncJob ([#16479](https://github.com/DataDog/integrations-core/pull/16479))
+
+## 34.3.1 / 2023-12-04 / Agent 7.50.0
+
+***Fixed***:
+
+* Bump the cryptography version to 41.0.6 ([#16322](https://github.com/DataDog/integrations-core/pull/16322))
+
+## 34.3.0 / 2023-11-10
+
+***Added***:
+
+* Updated dependencies. ([#16154](https://github.com/DataDog/integrations-core/pull/16154))
+
+***Fixed***:
+
+* Fix `aarch64` compatibility of the `sqlserver and ibm_was` check by downgrading `lxml` to version 4.9.2 ([16080](https://github.com/DataDog/integrations-core/pull/16080)) ([#16080](https://github.com/DataDog/integrations-core/pull/16080))
+* Bump the dnspython version to 2.4.2 on Python 3 ([#16150](https://github.com/DataDog/integrations-core/pull/16150))
+
+## 34.2.0 / 2023-11-06
+
+***Added***:
+
+* Add exceptions to skip instance configurations ([#16012](https://github.com/DataDog/integrations-core/pull/16012))
+
 ## 34.1.2 / 2023-11-02
 
 ***Fixed***:
@@ -27,6 +306,18 @@
 * Bump the `pymysql` version to 1.1.0 on Python 3 ([#16042](https://github.com/DataDog/integrations-core/pull/16042))
 * Bump the `pyodbc` version to 5.0.1 ([#16041](https://github.com/DataDog/integrations-core/pull/16041))
 
+## 34.0.3 / 2023-11-08 / Agent 7.49.1
+
+***Fixed***:
+
+* Fix `aarch64` compatibility of the `sqlserver` and `ibm_was` checks by downgrading `lxml` to version 4.9.2 ([16080](https://github.com/DataDog/integrations-core/pull/16080))
+
+## 34.0.2 / 2023-10-27 / Agent 7.49.0
+
+***Fixed***:
+
+* Bump the `cryptography` version to 41.0.5 ([#16083](https://github.com/DataDog/integrations-core/pull/16083))
+
 ## 34.0.1 / 2023-10-17
 
 ***Fixed***:
@@ -49,7 +340,7 @@
 
 * Fix type `bytes` is not JSON serializable for dbm events ([#15763](https://github.com/DataDog/integrations-core/pull/15763))
 
-## 33.1.0 / 2023-08-25
+## 33.1.0 / 2023-08-25 / Agent 7.48.0
 
 ***Security***:
 
@@ -110,7 +401,7 @@
 * Revert "Bump pydantic version in the agent_requirements.in file (#153… ([#15338](https://github.com/DataDog/integrations-core/pull/15338))
 * Bump pydantic version in the agent_requirements.in file ([#15320](https://github.com/DataDog/integrations-core/pull/15320))
 
-## 32.5.1 / 2023-07-19
+## 32.5.1 / 2023-07-19 / Agent 7.47.0
 
 ***Fixed***:
 

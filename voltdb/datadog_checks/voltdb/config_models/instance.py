@@ -34,7 +34,9 @@ class CustomQuery(BaseModel):
         arbitrary_types_allowed=True,
         frozen=True,
     )
+    collection_interval: Optional[int] = None
     columns: Optional[tuple[MappingProxyType[str, Any], ...]] = None
+    metric_prefix: Optional[str] = None
     query: Optional[str] = None
     tags: Optional[tuple[str, ...]] = None
 
@@ -101,6 +103,7 @@ class InstanceConfig(BaseModel):
     timeout: Optional[float] = None
     tls_ca_cert: Optional[str] = None
     tls_cert: Optional[str] = None
+    tls_ciphers: Optional[tuple[str, ...]] = None
     tls_ignore_warning: Optional[bool] = None
     tls_private_key: Optional[str] = None
     tls_protocols_allowed: Optional[tuple[str, ...]] = None

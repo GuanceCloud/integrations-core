@@ -27,8 +27,11 @@ def test_e2e_profile_citrix_netscaler_sdx(dd_agent_check):
     common_tags = [
         'snmp_profile:citrix-netscaler-sdx',
         'snmp_host:citrix-netscaler-sdx.device.name',
+        'device_hostname:citrix-netscaler-sdx.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ] + [
         'netscaler_sdx_system_bios_version:zombies',
         'netscaler_sdx_system_gateway:acted quaintly oxen',
@@ -233,6 +236,8 @@ def test_e2e_profile_citrix_netscaler_sdx(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.5951.6',
         'vendor': 'citrix',
         'version': 'their acted Jaded',
+        'device_type': 'load_balancer',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

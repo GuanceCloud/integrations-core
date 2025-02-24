@@ -16,7 +16,8 @@
       "Category::Message Queues",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "pulsar",
@@ -45,10 +45,9 @@
       },
       "process_signatures": [
         "java org.apache.pulsar.PulsarStandaloneStarter"
-      ]
-    },
-    "logs": {
-      "source": "pulsar"
+      ],
+      "source_type_id": 10143,
+      "auto_install": true
     }
   }
 }

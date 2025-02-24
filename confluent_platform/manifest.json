@@ -15,7 +15,9 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration",
+      "Product::Data Streams Monitoring"
     ]
   },
   "author": {
@@ -24,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Confluent Platform",
@@ -41,17 +42,16 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10091,
+      "auto_install": true
     },
     "dashboards": {
       "Confluent Platform Overview": "assets/dashboards/overview.json"
     },
     "monitors": {
-      "[Confluent Platform] Unclean leader election": "assets/monitors/unclean_leader_election.json",
-      "[Confluent Platform] Unused topic partition": "assets/monitors/unused_partition.json"
-    },
-    "logs": {
-      "source": "confluent_platform"
+      "Unclean leader election detected": "assets/monitors/unclean_leader_election.json",
+      "Topic partition is not used": "assets/monitors/unused_partition.json"
     }
   }
 }

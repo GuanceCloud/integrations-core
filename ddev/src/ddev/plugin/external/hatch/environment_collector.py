@@ -46,11 +46,11 @@ class DatadogChecksEnvironmentCollector(EnvironmentCollectorInterface):
 
     @cached_property
     def mypy_args(self):
-        return self.config.get('mypy-args', [])
+        return self.config.get('mypy-args', []) + ['--install-types', '--non-interactive']
 
     @cached_property
     def mypy_deps(self):
-        return self.config.get('mypy-deps', [])
+        return self.config.get('mypy-deps', []) + ['mypy']
 
     @cached_property
     def test_package_install_command(self):
@@ -131,11 +131,11 @@ class DatadogChecksEnvironmentCollector(EnvironmentCollectorInterface):
             'scripts': {
                 'style': [
                     f'black --config {settings_dir}/pyproject.toml --check --diff .',
-                    f'ruff --config {settings_dir}/pyproject.toml .',
+                    f'ruff check --config {settings_dir}/pyproject.toml .',
                 ],
                 'fmt': [
                     f'black . --config {settings_dir}/pyproject.toml',
-                    f'ruff --config {settings_dir}/pyproject.toml --fix .',
+                    f'ruff check --config {settings_dir}/pyproject.toml --fix .',
                     'python -c "print(\'\\n[NOTE] ruff may still report style errors for things '
                     'black cannot fix, these will need to be fixed manually.\')"',
                     'style',
@@ -144,10 +144,10 @@ class DatadogChecksEnvironmentCollector(EnvironmentCollectorInterface):
             },
             # We pin deps in order to make CI more stable/reliable.
             'dependencies': [
-                'black==22.12.0',
-                'ruff==0.0.257',
+                'black==24.10.0',
+                'ruff==0.8.0',
                 # Keep in sync with: /datadog_checks_base/pyproject.toml
-                'pydantic==2.0.2',
+                'pydantic==2.7.3',
             ],
         }
         config = {'lint': lint_env}
@@ -157,19 +157,6 @@ class DatadogChecksEnvironmentCollector(EnvironmentCollectorInterface):
                 f'mypy --config-file=../pyproject.toml {" ".join(self.mypy_args)}'.rstrip()
             ]
             lint_env['scripts']['all'].append('typing')
-            lint_env['dependencies'].extend(
-                [
-                    # TODO: remove extra when we drop Python 2
-                    'mypy[python2]==0.910; python_version<"3"',
-                    'mypy[python2]==1.3.0; python_version>"3"',
-                    # TODO: remove these when drop Python 2 and replace with --install-types --non-interactive
-                    'types-python-dateutil==2.8.2',
-                    'types-pyyaml==5.4.10',
-                    'types-requests==2.25.11',
-                    'types-simplejson==3.17.5',
-                    'types-six==1.16.2',
-                ]
-            )
             lint_env['dependencies'].extend(self.mypy_deps)
 
         return config

@@ -139,6 +139,63 @@ files:
         value:
           type: boolean
           example: true
+      - name: ping
+        description: |
+          Configure ICMP pings.
+          The network device is pinged with these settings each time the SNMP
+          check is run.
+
+          By default, we try to use an unprivileged UDP socket to send ICMP
+          pings, but some Linux systems require using a raw socket.
+          
+          If `linux.use_raw_socket` is set, you MUST enable the `ping` module
+          of the system-probe for elevated privileges. See
+          system-probe.yaml.example for details.
+          
+          Example:
+          ping:
+            enabled: true             # disabled by default
+            timeout: 3000             # timeout in milliseconds
+            count: 2                  # number of ping packets to send per check run
+            interval: 20              # time between sending pings (up to `count` packets) in milliseconds
+            linux:                    # linux specific configuration
+              use_raw_socket: true    # send pings in a privileged fashion using a raw socket
+        options:
+        - name: enabled
+          description: Enables/Disables pinging devices
+          value:
+            type: boolean
+            example: true
+            display_default: false
+        - name: count
+          description: Number of pings to send per check run
+          value:
+            type: integer
+            example: 2
+        - name: timeout
+          description: Timeout for all pings to execute in milliseconds
+          value:
+            type: integer
+            example: 3000
+        - name: interval
+          description: Interval between sending pings in milliseconds
+          value:
+            type: integer
+            example: 20
+        - name: linux
+          description: Linux-specific configuration
+          options:
+          - name: use_raw_socket
+            description: |
+              This may be required if your system doesn't support
+              sending pings in an unprivileged fashion (using a UDP socket)
+              If `use_raw_socket` is set to true, you MUST also enable the
+              system-probe which has elevated privileges, see system-probe.yaml.example
+              to enable it.
+            value:
+              type: boolean
+              example: true
+              display_default: false
       - template: init_config/default
         overrides:
           service.hidden: true
@@ -404,13 +461,20 @@ files:
         value:
           type: boolean
           example: true
+      - name: collect_topology
+        description: Enable the collection of topology (LLDP/CDP) data
+        value:
+          type: boolean
+          example: true
+          display_default: true
+
       - name: interface_configs
         description: |
           This option is used to override interface inbound/outbound speed and add interface tags.
           Example:
           interface_configs:
             - match_field: "name"  # (required) the field to match, can be `name` (interface name) or `index` (ifIndex)
-              match_value: "eth0"  # (required) the value to match
+              match_value: "eth0"  # (required, case sensitive) the value to match
               in_speed: 50         # (optional) inbound speed value in bits per sec, no value or 0 means no override
               out_speed: 25        # (optional) outbound speed value in bits per sec, no value or 0 means no override
               tags:                # (optional) interface level tags
@@ -434,7 +498,65 @@ files:
               tags:
                 - "monitored:true"
                 - "customKey:customValue"
+      - name: ping
+        description: |
+          Configure ICMP pings for all hosts in SNMP autodiscovery
+          Each device is pinged with these settings each time the SNMP
+          check is run.
+
+          By default, we try to use an unprivileged UDP socket to send ICMP
+          pings, but some Linux systems require using a raw socket.
+          
+          If `linux.use_raw_socket` is set, you MUST enable the `ping` module
+          of the system-probe for elevated privileges. See
+          system-probe.yaml.example for details.
+          
+          Example:
+          ping:
+            enabled: true             # disabled by default
+            timeout: 3000             # timeout in milliseconds
+            count: 2                  # number of ping packets to send per check run
+            interval: 20              # time between sending pings (up to `count` packets) in milliseconds
+            linux:                    # linux specific configuration
+              use_raw_socket: true    # send pings in a privileged fashion using a raw socket
+        options:
+        - name: enabled
+          description: Enables/Disables pinging devices
+          value:
+            type: boolean
+            example: true
+            display_default: false
+        - name: count
+          description: Number of pings to send per check run
+          value:
+            type: integer
+            example: 2
+        - name: timeout
+          description: Timeout for all pings to execute in milliseconds
+          value:
+            type: integer
+            example: 3000
+        - name: interval
+          description: Interval between sending pings in milliseconds
+          value:
+            type: integer
+            example: 20
+        - name: linux
+          description: Linux-specific configuration
+          options:
+          - name: use_raw_socket
+            description: |
+              This may be required if your system doesn't support
+              sending pings in an unprivileged fashion (using a UDP socket)
+              If `use_raw_socket` is set to true, you MUST also enable the
+              system-probe which has elevated privileges, see system-probe.yaml.example
+              to enable it.
+            value:
+              type: boolean
+              example: true
+              display_default: false
 
       - template: instances/default
         overrides:
           service.hidden: true
+          metric_patterns.hidden: true

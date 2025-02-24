@@ -30,8 +30,11 @@ def test_e2e_profile_aruba_switch(dd_agent_check):
     common_tags = [
         'snmp_profile:aruba-switch',
         'snmp_host:aruba-switch.device.name',
+        'device_hostname:aruba-switch.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
         'device_vendor:aruba',
     ] + []
 
@@ -113,6 +116,8 @@ def test_e2e_profile_aruba_switch(dd_agent_check):
         'sys_object_id': '1.3.6.1.4.1.14823.1.1.36',
         'vendor': 'aruba',
         'version': '8.6.0.4',
+        'device_type': 'switch',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

@@ -19,7 +19,8 @@
       "Category::Orchestration",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -28,7 +29,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "nginx-ingress-controller",
@@ -45,7 +45,9 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10050,
+      "auto_install": true
     },
     "dashboards": {
       "nginx_ingress_controller": "assets/dashboards/overview.json"
@@ -55,9 +57,6 @@
       "5xx_errors": "assets/saved_views/5xx_errors.json",
       "status_code_overview": "assets/saved_views/status_code_overview.json",
       "bot_errors": "assets/saved_views/bot_errors.json"
-    },
-    "logs": {
-      "source": "nginx_ingress_controller"
     }
   }
 }

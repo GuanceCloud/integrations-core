@@ -16,7 +16,8 @@
       "Supported OS::macOS",
       "Category::Configuration & Deployment",
       "Category::Containers",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -25,7 +26,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Marathon",
@@ -45,16 +45,15 @@
       },
       "process_signatures": [
         "start --master mesos marathon"
-      ]
+      ],
+      "source_type_id": 82,
+      "auto_install": true
     },
     "dashboards": {
       "marathon-overview": "assets/dashboards/marathon-overview_dashboard.json"
     },
     "saved_views": {
       "marathon_processes": "assets/saved_views/marathon_processes.json"
-    },
-    "logs": {
-      "source": "marathon"
     }
   }
 }

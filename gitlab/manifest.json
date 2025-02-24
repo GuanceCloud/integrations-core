@@ -19,7 +19,10 @@
       "Category::Source Control",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Submitted Data Type::Metrics",
+      "Submitted Data Type::Logs",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -28,7 +31,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Gitlab",
@@ -53,13 +55,12 @@
         "gitlab-kas",
         "gitlab-workhorse",
         "gitlab-ctl"
-      ]
+      ],
+      "source_type_id": 10026,
+      "auto_install": true
     },
     "dashboards": {
       "Gitlab Overview": "assets/dashboards/overview.json"
-    },
-    "logs": {
-      "source": "gitlab"
     }
   }
 }

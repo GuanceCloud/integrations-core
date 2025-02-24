@@ -16,7 +16,7 @@ from ...dependencies import (
 )
 from ...testing import process_checks_option
 from ...utils import complete_valid_checks, get_project_file, has_project_file
-from ..console import CONTEXT_SETTINGS, abort, annotate_error, annotate_errors, echo_failure
+from ..console import CONTEXT_SETTINGS, abort, annotate_error, annotate_errors, echo_failure, echo_success
 
 
 def get_marker_string(dependency_definition):
@@ -204,7 +204,7 @@ def dep(check, require_base_check_version, min_base_check_version):
                 failed = True
                 message = (
                     f'Dependency {name} found in the {check_name} integration requirements '
-                    'but not on the agent requirements, they should be synced.'
+                    'but not in the agent requirements, run `ddev dep freeze` to sync them.'
                 )
                 echo_failure(message)
                 annotate_error(req_source, message)
@@ -224,7 +224,7 @@ def dep(check, require_base_check_version, min_base_check_version):
 
         # Check that this dependency defined on the agent requirements is actually used
         # This only makes sense when we take all check dependencies into account
-        if checks is None and name not in check_dependencies:
+        if check is None and name not in check_dependencies:
             failed = True
             message = f'Stale dependency needs to be removed by syncing: {name}'
             echo_failure(message)
@@ -241,7 +241,11 @@ def dep(check, require_base_check_version, min_base_check_version):
             message = (
                 f'Mismatch for dependency `{name}`:\n'
                 f'    Agent: {" | ".join(sorted(agent_dependency_definitions))}\n'
-                f'    Checks: {" | ".join(sorted(check_dependency_definitions))}'
+                f'    Checks: {" | ".join(sorted(check_dependency_definitions))}\n'
+                'If you think the Agent requirements are correct, run:\n'
+                'ddev dep sync\n'
+                'If you think the Checks requirements are correct, run:\n'
+                'ddev dep freeze'
             )
             echo_failure(message)
             annotate_error(agent_dependencies_file, message)
@@ -249,3 +253,4 @@ def dep(check, require_base_check_version, min_base_check_version):
 
         if failed:
             abort()
+    echo_success("All dependencies are valid!")

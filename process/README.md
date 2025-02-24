@@ -21,10 +21,10 @@ While there's no standard default check configuration, here's an example `proces
 ```yaml
 init_config:
 instances:
-- name: ssh
-  search_string:
-    - ssh
-    - sshd
+  - name: ssh
+    search_string:
+      - ssh
+      - sshd
 ```
 
 **Note**: After you make configuration changes, make sure you [restart the Agent][4].
@@ -50,8 +50,13 @@ The following metrics are not available on Windows:
 - `system.processes.mem.page_faults.children_minor_faults`
 - `system.processes.mem.page_faults.major_faults`
 - `system.processes.mem.page_faults.children_major_faults`
+- `system.processes.mem.real`
 
 **Note**: Use a [WMI check][11] to gather page fault metrics on Windows.
+
+**Note**: In v6.11+ on Windows, the Agent runs as `ddagentuser` instead of `Local System`. Because of [this][12], it does not have access to the full command line of processes running under other users and to the user of other users' processes. This causes the following options of the check to not work:
+- `exact_match` when set to `false`
+- `user`, which allows selecting processes that belong to a specific user
 
 All metrics are per `instance` configured in process.yaml, and are tagged `process_name:<instance_name>`.
 
@@ -93,3 +98,4 @@ To get a better idea of how (or why) to monitor process resource consumption wit
 [9]: https://docs.datadoghq.com/help/
 [10]: https://www.datadoghq.com/blog/process-check-monitoring
 [11]: https://docs.datadoghq.com/integrations/wmi_check/
+[12]: https://docs.datadoghq.com/agent/guide/windows-agent-ddagent-user/#process-check

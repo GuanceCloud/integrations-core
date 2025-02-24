@@ -7,7 +7,7 @@ from requests.exceptions import RequestException
 
 from datadog_checks.base import AgentCheck, ConfigurationError
 
-from .constants import CATEGORIES, NUMERIC_TYPES
+from .constants import CATEGORIES, MAX_PAGES, NUMERIC_TYPES
 
 
 class SonarqubeCheck(AgentCheck):
@@ -111,7 +111,7 @@ class SonarqubeCheck(AgentCheck):
         page = 1
         seen = 0
         total = -1
-        while seen != total:
+        while seen != total and page <= MAX_PAGES:
             response = self.http.get('{}/api/metrics/search'.format(self._web_endpoint), params={'p': page})
             response.raise_for_status()
             self.log.debug('/api/metrics/search response: %s', response.json())
@@ -136,7 +136,7 @@ class SonarqubeCheck(AgentCheck):
         page = 1
         seen = 0
         total = -1
-        while seen != total:
+        while seen != total and page <= MAX_PAGES:
             response = self.http.get(
                 '{}/api/components/search'.format(self._web_endpoint), params={'qualifiers': 'TRK', 'p': page}
             )
@@ -159,7 +159,7 @@ class SonarqubeCheck(AgentCheck):
             self.log.warning('The SonarQube version was not found in response')
             return
         # The version comes in like `8.5.0.37579` though sometimes there is no build part
-        version_parts = {name: part for name, part in zip(('major', 'minor', 'patch', 'build'), version.split('.'))}
+        version_parts = dict(zip(('major', 'minor', 'patch', 'build'), version.split('.')))
         self.log.debug('version: %s', version_parts)
         self.set_metadata('version', version, scheme='parts', final_scheme='semver', part_map=version_parts)
 

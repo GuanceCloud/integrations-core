@@ -17,7 +17,11 @@ from datadog_checks.sqlserver.connection import (
     SQLConnectionError,
     parse_connection_string_properties,
 )
-from datadog_checks.sqlserver.connection_errors import ConnectionErrorCode, format_connection_exception
+from datadog_checks.sqlserver.connection_errors import (
+    ConnectionErrorCode,
+    format_connection_exception,
+    obfuscate_error_msg,
+)
 
 from .common import CHECK_NAME, SQLSERVER_MAJOR_VERSION
 
@@ -70,8 +74,7 @@ def test_warn_trusted_connection_username_pass(instance_minimal_defaults, cs, us
     instance_minimal_defaults["connection_string"] = cs
     instance_minimal_defaults["username"] = username
     instance_minimal_defaults["password"] = password
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     connection.log = mock.MagicMock()
     connection._connection_options_validation('somekey', 'somedb')
     if expect_warning:
@@ -93,8 +96,7 @@ def test_warn_trusted_connection_username_pass(instance_minimal_defaults, cs, us
 )
 def test_will_warn_parameters_for_the_wrong_connection(instance_minimal_defaults, connector, param):
     instance_minimal_defaults.update({'connector': connector, param: 'foo'})
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     connection.log = mock.MagicMock()
     connection._connection_options_validation('somekey', 'somedb')
     connection.log.warning.assert_called_once_with(
@@ -126,8 +128,7 @@ def test_will_warn_parameters_for_the_wrong_connection(instance_minimal_defaults
 )
 def test_will_fail_for_duplicate_parameters(instance_minimal_defaults, connector, cs, param, should_fail):
     instance_minimal_defaults.update({'connector': connector, param: 'foo', 'connection_string': cs + "=foo"})
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     if should_fail:
         match = (
             "%s has been provided both in the connection string and as a configuration option (%s), "
@@ -158,8 +159,7 @@ def test_will_fail_for_duplicate_parameters(instance_minimal_defaults, connector
 def test_will_fail_for_wrong_parameters_in_the_connection_string(instance_minimal_defaults, connector, cs):
     instance_minimal_defaults.update({'connector': connector, 'connection_string': cs + '=foo'})
     other_connector = 'odbc' if connector != 'odbc' else 'adodbapi'
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     match = (
         "%s has been provided in the connection string. "
         "This option is only available for %s connections, however %s has been selected"
@@ -222,8 +222,7 @@ def test_managed_auth_config_valid(instance_minimal_defaults, name, managed_iden
         for k, v in managed_identity_config.items():
             instance_minimal_defaults[k] = v
     instance_minimal_defaults.update({'connector': 'odbc'})
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     if should_fail:
         with pytest.raises(ConfigurationError, match=re.escape(expected_err)):
             connection._connection_options_validation('somekey', 'somedb')
@@ -283,12 +282,12 @@ def test_managed_auth_config_valid(instance_minimal_defaults, name, managed_iden
 def test_config_with_and_without_port(instance_minimal_defaults, host, port, expected_host):
     instance_minimal_defaults["host"] = host
     instance_minimal_defaults["port"] = port
-    check = SQLServer(CHECK_NAME, {}, [instance_minimal_defaults])
-    connection = Connection(check, {}, instance_minimal_defaults, None)
+    connection = Connection({}, instance_minimal_defaults, None)
     _, result_host, _, _, _, _ = connection._get_access_info('somekey', 'somedb')
     assert result_host == expected_host
 
 
+@pytest.mark.flaky
 @pytest.mark.integration
 @pytest.mark.usefixtures('dd_environment')
 @pytest.mark.skipif(running_on_windows_ci() and SQLSERVER_MAJOR_VERSION == 2019, reason='Test flakes on this set up')
@@ -333,7 +332,7 @@ def test_connection_cleanup(instance_docker):
             with check.connection.get_managed_cursor() as cursor:
                 assert len(check.connection._conns) == 1
                 cursor.execute("gimme some data")
-    assert "incorrect syntax" in str(e).lower()
+    assert "incorrect syn" in str(e).lower()
     assert len(check.connection._conns) == 0, "connection should have been closed"
 
     # application exception
@@ -365,9 +364,7 @@ def test_connection_failure(aggregator, dd_run_check, instance_docker):
 
     try:
         # Break the connection
-        check.connection = Connection(
-            check, {}, {'host': '', 'username': '', 'password': ''}, check.handle_service_check
-        )
+        check.connection = Connection({}, {'host': '', 'username': '', 'password': ''}, check.handle_service_check)
         dd_run_check(check)
     except Exception:
         aggregator.assert_service_check(
@@ -384,7 +381,7 @@ def test_connection_failure(aggregator, dd_run_check, instance_docker):
     )
 
 
-@pytest.mark.unit
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "test_case_name,instance_overrides,expected_error_patterns,expected_error",
     [
@@ -477,8 +474,8 @@ def test_connection_error_reporting(
         if instance_docker['connector'] == 'odbc':
             pytest.skip("adoprovider_override is not relevant for the odbc connector")
         adoprovider_override = instance_overrides['adoprovider'].upper()
-        if adoprovider_override not in Connection.valid_adoproviders:
-            Connection.valid_adoproviders.append(adoprovider_override)
+        if adoprovider_override not in Connection.VALID_ADOPROVIDERS:
+            Connection.VALID_ADOPROVIDERS.append(adoprovider_override)
     if 'adoprovider' in instance_docker and ('driver' in instance_overrides or 'dsn' in instance_overrides):
         pytest.skip("driver or DSN overrides is not relevant for the adoprovider")
 
@@ -491,7 +488,7 @@ def test_connection_error_reporting(
     expected_error_pattern = matching_patterns[0]
 
     check = SQLServer(CHECK_NAME, {}, [instance_docker])
-    connection = Connection(check, check.init_config, check.instance, check.handle_service_check)
+    connection = Connection(check.init_config, check.instance, check.handle_service_check)
     with pytest.raises(SQLConnectionError) as excinfo:
         with connection.open_managed_default_connection():
             pytest.fail("connection should not have succeeded")
@@ -552,3 +549,92 @@ def test_format_connection_error(
     _, conn_err = format_connection_exception(error_message, driver)
     assert conn_err
     assert conn_err.value == expected_error.value
+
+
+@pytest.mark.integration
+@pytest.mark.usefixtures('dd_environment')
+def test_restore_current_database_context(instance_docker):
+    check = SQLServer(CHECK_NAME, {}, [instance_docker])
+    check.initialize_connection()
+    with check.connection.open_managed_default_connection():
+        current_db = check.connection._get_current_database_context()
+        with check.connection.restore_current_database_context():
+            with check.connection.get_managed_cursor() as cursor:
+                cursor.execute("USE tempdb")
+                assert check.connection._get_current_database_context() == "tempdb"
+        assert check.connection._get_current_database_context() == current_db
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    "error_message,password,expected_error_message",
+    [
+        pytest.param(
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=PWD123!;\"')",
+            "PWD123!",
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=******;\"')",
+            id="regular_password",
+        ),
+        pytest.param(
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=Pass\\\\Wrd;\"')",
+            "Pass\\Wrd",
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=******;\"')",
+            id="password_with_backslash",
+        ),
+        pytest.param(
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=;\"')",
+            "",
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=;\"')",
+            id="empty_password",
+        ),
+        pytest.param(
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=;\"')",
+            None,
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=;\"')",
+            id="no_password",
+        ),
+        pytest.param(
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=\"12345\";\"')",
+            "\"12345!D!T\"",
+            "TCP-connection(ERROR: The requested address is not valid in its context), Exception: "
+            "OperationalError(com_error(-2147352567, 'Exception occurred.', (0, 'Microsoft OLE DB Driver for SQL "
+            "Server', \"Login failed for user 'datadog'.\", None, 0, 2147217843), None), 'Error opening connection to "
+            "\"ConnectRetryCount=2;Provider=MSOLEDBSQL;Data Source=localhost;User ID=datadog;Password=******;\"')",
+            id="password_with_quotes",
+        ),
+    ],
+)
+def test_obfuscate_error_msg(
+    error_message,
+    password,
+    expected_error_message,
+):
+    obfuscated_error_message = obfuscate_error_msg(error_message, password)
+    assert obfuscated_error_message == expected_error_message

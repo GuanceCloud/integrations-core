@@ -5,7 +5,6 @@ import copy
 
 import mock
 import pytest
-from six import PY2
 
 from datadog_checks.amazon_msk import AmazonMskCheck
 from datadog_checks.amazon_msk.metrics import JMX_METRICS_MAP, NODE_METRICS_MAP, NODE_METRICS_OVERRIDES
@@ -30,7 +29,9 @@ def test_node_check_legacy(aggregator, instance_legacy, mock_client):
     aggregator.assert_service_check(c.SERVICE_CHECK_CONNECT, c.OK, tags=global_tags)
 
     for node_info in client.list_nodes()['NodeInfoList']:
-        broker_info = node_info['BrokerNodeInfo']
+        broker_info = node_info.get('BrokerNodeInfo')
+        if broker_info is None:
+            continue
         broker_tags = ['broker_id:{}'.format(broker_info['BrokerId'])]
         broker_tags.extend(global_tags)
 
@@ -84,7 +85,6 @@ def test_disabled_exporter_legacy(
 
 
 @pytest.mark.usefixtures('mock_data')
-@pytest.mark.skipif(PY2, reason='Test only available on Python 3')
 def test_node_check(aggregator, dd_run_check, instance, mock_client):
     c = AmazonMskCheck('amazon_msk', {}, [instance])
     dd_run_check(c)
@@ -101,7 +101,10 @@ def test_node_check(aggregator, dd_run_check, instance, mock_client):
     aggregator.assert_service_check('aws.msk.{}'.format(c.SERVICE_CHECK_CONNECT), c.OK, tags=global_tags)
 
     for node_info in client.list_nodes()['NodeInfoList']:
-        broker_info = node_info['BrokerNodeInfo']
+        broker_info = node_info.get('BrokerNodeInfo')
+        if broker_info is None:
+            continue
+
         broker_tags = ['broker_id:{}'.format(broker_info['BrokerId'])]
         broker_tags.extend(global_tags)
 
@@ -121,7 +124,6 @@ def test_node_check(aggregator, dd_run_check, instance, mock_client):
 
 
 @pytest.mark.usefixtures('mock_data')
-@pytest.mark.skipif(PY2, reason='Test only available on Python 3')
 @pytest.mark.parametrize(
     'jmx_exporter_port, node_exporter_port, assert_jmx_metrics_enabled, assert_node_metrics_enabled',
     [
@@ -225,7 +227,9 @@ def test_custom_metric_path(aggregator, instance_legacy, mock_client):
     aggregator.assert_service_check(c.SERVICE_CHECK_CONNECT, c.OK, tags=global_tags)
 
     for node_info in client.list_nodes()['NodeInfoList']:
-        broker_info = node_info['BrokerNodeInfo']
+        broker_info = node_info.get('BrokerNodeInfo')
+        if broker_info is None:
+            continue
         broker_tags = ['broker_id:{}'.format(broker_info['BrokerId'])]
         broker_tags.extend(global_tags)
 
@@ -246,9 +250,7 @@ def test_custom_metric_path(aggregator, instance_legacy, mock_client):
     'instance',
     [
         pytest.param(INSTANCE_LEGACY, id='legacy config proxy'),
-        pytest.param(
-            INSTANCE, id='new config proxy', marks=pytest.mark.skipif(PY2, reason='Test only available on Python 3')
-        ),
+        pytest.param(INSTANCE, id='new config proxy'),
     ],
 )
 def test_proxy_config(instance):
@@ -262,9 +264,7 @@ def test_proxy_config(instance):
     'instance',
     [
         pytest.param(INSTANCE_LEGACY, id='legacy config proxy'),
-        pytest.param(
-            INSTANCE, id='new config proxy', marks=pytest.mark.skipif(PY2, reason='Test only available on Python 3')
-        ),
+        pytest.param(INSTANCE, id='new config proxy'),
     ],
 )
 def test_boto_config(instance):
@@ -283,9 +283,7 @@ def test_boto_config(instance):
     'instance',
     [
         pytest.param(INSTANCE_LEGACY, id='legacy config proxy'),
-        pytest.param(
-            INSTANCE, id='new config proxy', marks=pytest.mark.skipif(PY2, reason='Test only available on Python 3')
-        ),
+        pytest.param(INSTANCE, id='new config proxy'),
     ],
 )
 def test_invalid_boto_config(aggregator, instance, dd_run_check, caplog):

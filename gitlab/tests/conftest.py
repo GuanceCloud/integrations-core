@@ -10,7 +10,6 @@ from time import sleep
 import mock
 import pytest
 import requests
-from six import PY2
 
 from datadog_checks.dev import EnvVars, TempDir, docker_run
 from datadog_checks.dev._env import get_state, save_state
@@ -62,18 +61,25 @@ def dd_environment():
         'GITLAB_LOCAL_GITALY_PROMETHEUS_PORT': str(GITLAB_LOCAL_GITALY_PROMETHEUS_PORT),
     }
 
+    conditions = []
+
+    for _ in range(2):
+        conditions.extend(
+            [
+                CheckEndpoints(GITLAB_URL, attempts=100, wait=6),
+                CheckEndpoints(GITLAB_PROMETHEUS_ENDPOINT, attempts=100, wait=6),
+                CheckEndpoints(PROMETHEUS_ENDPOINT, attempts=100, wait=6),
+                CheckEndpoints(GITLAB_GITALY_PROMETHEUS_ENDPOINT, attempts=100, wait=10),
+                CheckEndpoints(GITLAB_READINESS_ENDPOINT, attempts=100, wait=10),
+                CheckEndpoints(GITLAB_LIVENESS_ENDPOINT, attempts=100, wait=10),
+                CheckEndpoints(GITLAB_HEALTH_ENDPOINT, attempts=100, wait=10),
+            ]
+        )
+
     with docker_run(
         compose_file=os.path.join(HERE, 'compose', 'docker-compose.yml'),
         env_vars=env,
-        conditions=[
-            CheckEndpoints(GITLAB_URL, attempts=100, wait=6),
-            CheckEndpoints(GITLAB_PROMETHEUS_ENDPOINT, attempts=100, wait=6),
-            CheckEndpoints(PROMETHEUS_ENDPOINT, attempts=100, wait=6),
-            CheckEndpoints(GITLAB_GITALY_PROMETHEUS_ENDPOINT, attempts=100, wait=10),
-            CheckEndpoints(GITLAB_READINESS_ENDPOINT, attempts=100, wait=10),
-            CheckEndpoints(GITLAB_LIVENESS_ENDPOINT, attempts=100, wait=10),
-            CheckEndpoints(GITLAB_HEALTH_ENDPOINT, attempts=100, wait=10),
-        ],
+        conditions=conditions,
         wrappers=[create_log_volumes()],
     ):
         # run pre-test commands
@@ -249,9 +255,6 @@ def to_omv2_config(config):
 
 @pytest.fixture
 def use_openmetrics(request):
-    if request.param and PY2:
-        pytest.skip('This version of the integration is only available when using Python 3.')
-
     return request.param
 
 

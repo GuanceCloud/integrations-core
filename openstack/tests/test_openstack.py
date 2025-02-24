@@ -7,7 +7,6 @@ import time
 
 import mock
 import pytest
-from six import iteritems
 
 from datadog_checks.base import AgentCheck
 from datadog_checks.openstack.openstack import (
@@ -138,7 +137,7 @@ def test_unscoped_from_config():
 
                 assert scope.auth_token == 'fake_token'
                 assert len(scope.project_scope_map) == 1
-                for _, project_scope in iteritems(scope.project_scope_map):
+                for project_scope in scope.project_scope_map.values():
                     assert isinstance(project_scope, OpenStackProjectScope)
                     assert project_scope.auth_token == 'fake_token'
                     assert project_scope.tenant_id == '263fd9'
@@ -300,3 +299,55 @@ def test_cache_between_runs(self, *args):
 
     assert 'server-1' not in cached_servers
     assert 'server_newly_added' in cached_servers
+
+
+@pytest.mark.parametrize(
+    'init_config, instances, exception',
+    [
+        pytest.param(
+            {
+                'keystone_server_url': 'http://10.0.2.15:5000',
+                'ssl_verify': False,
+            },
+            [{}],
+            r'datadog_checks.base.errors.ConfigurationError: Detected 2 errors',
+            id="empty instance",
+        ),
+        pytest.param(
+            {
+                'keystone_server_url': 'http://10.0.2.15:5000',
+                'ssl_verify': False,
+            },
+            [{'name': 'test'}],
+            r'datadog_checks.base.errors.ConfigurationError: Detected 1 error',
+            id="no user",
+        ),
+        pytest.param(
+            {
+                'keystone_server_url': 'http://10.0.2.15:5000',
+                'ssl_verify': False,
+            },
+            [{'user': {'name': 'test'}}],
+            r'datadog_checks.base.errors.ConfigurationError: Detected 1 error',
+            id="no name",
+        ),
+        pytest.param(
+            {
+                'keystone_server_url': 'http://10.0.2.15:5000',
+                'ssl_verify': False,
+            },
+            [{'user': {'name': 'test', 'password': 'pass', 'domain': {'id': 'test'}}, 'name': 'test'}],
+            None,
+            id="valid",
+        ),
+    ],
+)
+def test_config(dd_run_check, init_config, instances, exception, caplog):
+    check = OpenStackCheck("test", init_config, instances)
+
+    if exception is not None:
+        with pytest.raises(Exception, match=exception):
+            dd_run_check(check)
+    else:
+        dd_run_check(check)
+        assert "The agent could not contact the specified identity server" in caplog.text

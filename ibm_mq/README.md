@@ -10,7 +10,7 @@ This check monitors [IBM MQ][1] versions 9.1 and above.
 
 The IBM MQ check is included in the [Datadog Agent][2] package.
 
-To use the IBM MQ check, you need to make sure the [IBM MQ Client][3] 9.1+ is installed (unless a compatible version of IBM MQ server is installed on the Agent host). Currently, the IBM MQ check does not support connecting to an IBM MQ server on z/OS.
+To use the IBM MQ check, ensure that an [IBM MQ Client][3] version 9.1+ is installed (unless a compatible version of IBM MQ server is already installed on the Agent host). For example the [9.3 Redistributable client][17]. Currently, the IBM MQ check does not support connecting to an IBM MQ server on z/OS.
 
 #### On Linux
 
@@ -138,6 +138,13 @@ Configure the environment variable `MQ_FILE_PATH`, to point at the data director
 ### Permissions and authentication
 
 There are many ways to set up permissions in IBM MQ. Depending on how your setup works, create a `datadog` user within MQ with read only permissions and, optionally, `+chg` permissions. `+chg` permissions are required to collect metrics for [reset queue statistics][14] (`MQCMD_RESET_Q_STATS`). If you do not wish to collect these metrics you can disable `collect_reset_queue_metrics` on the configuration. Collecting reset queue statistics performance data will also reset the performance data.
+
+The example below sets the required permissions on the queue manager `QM1` for the `mqclient` group, the group the `datadog` user is using to execute commands. You can use wildcards to grant permissions to many queues at once.
+
+{{< code-block lang="shell" >}}
+setmqaut -m QM1 -n SYSTEM.ADMIN.COMMAND.QUEUE -t queue -g mqclient +dsp +inq +get +put
+setmqaut -m QM1 -n SYSTEM.MQEXPLORER.REPLY.MODEL -t queue -g mqclient +dsp +inq +get +put
+{{< /code-block >}}
 
 **Note**: "Queue Monitoring" must be enabled on the MQ server and set to at least "Medium". This can be done using the MQ UI or with an `mqsc` command in the server's host:
 
@@ -306,7 +313,7 @@ Additional helpful documentation, links, and articles:
 
 [1]: https://www.ibm.com/products/mq
 [2]: https://app.datadoghq.com/account/settings/agent/latest
-[3]: https://www.ibm.com/support/pages/mqc9-ibm-mq-9-clients
+[3]: https://www.ibm.com/docs/en/ibm-mq/9.3?topic=roadmap-mq-downloads#mq_downloads_admins__familyraclients__title__1
 [4]: https://developer.apple.com/library/archive/documentation/Security/Conceptual/System_Integrity_Protection_Guide/RuntimeProtections/RuntimeProtections.html#//apple_ref/doc/uid/TP40016462-CH3-SW1
 [5]: https://github.com/DataDog/integrations-core/blob/master/ibm_mq/datadog_checks/ibm_mq/data/conf.yaml.example
 [6]: https://docs.datadoghq.com/agent/guide/agent-commands/#start-stop-and-restart-the-agent
@@ -320,3 +327,4 @@ Additional helpful documentation, links, and articles:
 [14]: https://www.ibm.com/docs/en/ibm-mq/9.1?topic=formats-reset-queue-statistics
 [15]: https://www.ibm.com/docs/en/ibm-mq/9.2?topic=reference-setmqaut-grant-revoke-authority
 [16]: https://www.ibm.com/docs/en/ibm-mq/9.2?topic=queues-dynamic-model
+[17]: https://www.ibm.com/support/fixcentral/swg/selectFixes?parent=ibm~WebSphere&product=ibm/WebSphere/WebSphere+MQ&release=9.3.0.0&platform=All&function=fixid&fixids=*IBM-MQC-Redist-*

@@ -75,8 +75,11 @@ files:
         The check will report as DOWN if status code returned differs.
         This defaults to 1xx, 2xx and 3xx HTTP status code.
       value:
-        type: string
+        anyOf:
+          - type: string
+          - type: integer
         example: (1|2|3)\d\d
+        default: (1|2|3)\d\d
     - name: include_content
       description: |
         The include_content parameter will instruct the check
@@ -183,3 +186,4 @@ files:
         tls_cert.hidden: true
         tls_ca_cert.hidden: true
         tls_private_key.hidden: true
+        tls_ciphers.hidden: true

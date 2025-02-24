@@ -2,7 +2,46 @@
 
 <!-- towncrier release notes start -->
 
-## 2.0.1 / 2023-10-26
+## 4.1.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 4.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 3.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 2.2.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Bump dependencies ([#16858](https://github.com/DataDog/integrations-core/pull/16858))
+
+## 2.1.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Add `cpu_usage.pct` metric from `ELAPSED_CPU_PERCENTAGE` retrieved from query ([#16332](https://github.com/DataDog/integrations-core/pull/16332))
+
+## 2.0.1 / 2023-10-26 / Agent 7.50.0
 
 ***Fixed***:
 

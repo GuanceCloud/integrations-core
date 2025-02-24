@@ -2,6 +2,56 @@
 
 <!-- towncrier release notes start -->
 
+## 6.1.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 6.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 5.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 4.9.1 / 2024-07-05 / Agent 7.56.0
+
+***Fixed***:
+
+* Using constant values instead of reassigning variables in each check run ([#17749](https://github.com/DataDog/integrations-core/pull/17749))
+
+## 4.9.0 / 2024-05-31 / Agent 7.55.0
+
+***Added***:
+
+* Add optional display_name tag ([#17657](https://github.com/DataDog/integrations-core/pull/17657))
+
+## 4.8.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 4.7.1 / 2023-11-10 / Agent 7.50.0
+
+***Fixed***:
+
+* Fix regression introduced in Agent 7.41.0 when handling service name patterns that are a prefix of another pattern ([#16120](https://github.com/DataDog/integrations-core/pull/16120))
+
 ## 4.7.0 / 2023-10-26
 
 ***Added***:

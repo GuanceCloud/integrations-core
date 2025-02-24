@@ -31,6 +31,14 @@ class CollectPerInstanceFilters(BaseModel):
     vm: Optional[tuple[str, ...]] = None
 
 
+class IncludeEvent(BaseModel):
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
+    excluded_messages: Optional[tuple[str, ...]] = None
+
+
 class MetricFilters(BaseModel):
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -114,6 +122,7 @@ class RestApiOptions(BaseModel):
     timeout: Optional[float] = None
     tls_ca_cert: Optional[str] = None
     tls_cert: Optional[str] = None
+    tls_ciphers: Optional[tuple[str, ...]] = None
     tls_ignore_warning: Optional[bool] = None
     tls_private_key: Optional[str] = None
     tls_protocols_allowed: Optional[tuple[str, ...]] = None
@@ -138,6 +147,7 @@ class InstanceConfig(BaseModel):
     collect_per_instance_filters: Optional[CollectPerInstanceFilters] = None
     collect_property_metrics: Optional[bool] = None
     collect_tags: Optional[bool] = None
+    collect_vsan_data: Optional[bool] = None
     collection_level: Optional[int] = None
     collection_type: Optional[str] = None
     connection_reset_timeout: Optional[int] = None
@@ -146,7 +156,9 @@ class InstanceConfig(BaseModel):
     event_resource_filters: Optional[tuple[str, ...]] = None
     excluded_host_tags: Optional[tuple[str, ...]] = None
     host: str
+    hostname_transform: Optional[str] = None
     include_datastore_cluster_folder_tag: Optional[bool] = None
+    include_events: Optional[tuple[IncludeEvent, ...]] = None
     max_historical_metrics: Optional[int] = None
     metric_filters: Optional[MetricFilters] = None
     metric_patterns: Optional[MetricPatterns] = None
@@ -158,6 +170,7 @@ class InstanceConfig(BaseModel):
     resource_filters: Optional[tuple[ResourceFilter, ...]] = None
     rest_api_options: Optional[RestApiOptions] = None
     service: Optional[str] = None
+    ssl_cafile: Optional[str] = None
     ssl_capath: Optional[str] = None
     ssl_verify: Optional[bool] = None
     tags: Optional[tuple[str, ...]] = None

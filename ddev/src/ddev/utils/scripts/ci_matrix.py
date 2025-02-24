@@ -3,6 +3,7 @@ Running this script by itself requires Python 3.11 or later and must not use any
 
 The logic is also imported by ddev to perform the CI validation on 3.8 which works because dependencies exist.
 """
+
 # (C) Datadog, Inc. 2023-present
 # All rights reserved
 # Licensed under a 3-clause BSD style license (see LICENSE)
@@ -53,7 +54,7 @@ TESTABLE_FILE_PATTERN = re.compile(
     """,
     re.VERBOSE,
 )
-AGENT_REQUIREMENTS_FILE = 'datadog_checks_base/datadog_checks/base/data/agent_requirements.in'
+AGENT_REQUIREMENTS_FILE = 'agent_requirements.in'
 NON_TESTABLE_FILES = {'auto_conf.yaml'}
 DISPLAY_ORDER_OVERRIDE = {
     _d: _i
@@ -73,8 +74,8 @@ PLATFORMS = {
     'linux': __plat('Linux', 'ubuntu-22.04'),
     # https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md
     'windows': __plat('Windows', 'windows-2022'),
-    # https://github.com/actions/runner-images/blob/main/images/macos/macos-12-Readme.md
-    'macos': __plat('macOS', 'macos-12'),
+    # https://github.com/actions/runner-images/blob/main/images/macos/macos-13-Readme.md
+    'macos': __plat('macOS', 'macos-13'),
 }
 
 
@@ -223,7 +224,7 @@ def construct_job_matrix(root: Path, targets: list[str]) -> list[dict[str, Any]]
 
             if target in display_overrides:
                 config['name'] = display_overrides[target]
-            elif manifest:
+            elif manifest and 'integration' in manifest.get('assets', {}):
                 config['name'] = manifest['assets']['integration']['source_type_name']
             else:
                 config['name'] = target

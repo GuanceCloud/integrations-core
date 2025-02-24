@@ -17,7 +17,8 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -26,7 +27,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "ArangoDB",
@@ -43,17 +43,16 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10266,
+      "auto_install": true
     },
     "dashboards": {
       "ArangoDB Overview": "assets/dashboards/arangodb_overview.json"
     },
     "monitors": {
-      "[ArangoDB] High server Kernel mode percentage usage": "assets/monitors/high_server_kernel_mode.json",
-      "[ArangoDB] High server User mode percentage usage": "assets/monitors/high_server_user_mode.json"
-    },
-    "logs": {
-      "source": "arangodb"
+      "ArangoDB's server Kernel mode usage is higher": "assets/monitors/high_server_kernel_mode.json",
+      "ArangoDB's server User mode usage is higher": "assets/monitors/high_server_user_mode.json"
     }
   }
 }

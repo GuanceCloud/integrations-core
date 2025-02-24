@@ -2,12 +2,12 @@
 # All rights reserved
 # Licensed under a 3-clause BSD style license (see LICENSE)
 from copy import deepcopy
-from re import match
-
-from six import iteritems
+from re import match, search, sub
 
 from datadog_checks.base.checks.openmetrics import OpenMetricsBaseCheck
 from datadog_checks.base.errors import CheckException
+
+from .sli_metrics import SliMetricsScraperMixin
 
 METRICS = {
     'apiserver_current_inflight_requests': 'current_inflight_requests',
@@ -24,6 +24,7 @@ METRICS = {
     'apiserver_request_duration_seconds': 'request_duration_seconds',
     'apiserver_request_latencies': 'request_latencies',
     'apiserver_request_latency_seconds': 'request_latencies',
+    'process_cpu_seconds_total': 'process_cpu_total',
     'process_resident_memory_bytes': 'process_resident_memory_bytes',
     'process_virtual_memory_bytes': 'process_virtual_memory_bytes',
     'grpc_client_started_total': 'grpc_client_started_total',
@@ -88,7 +89,7 @@ METRICS = {
 }
 
 
-class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
+class KubeAPIServerMetricsCheck(SliMetricsScraperMixin, OpenMetricsBaseCheck):
     """
     Collect kubernetes apiserver metrics in the Prometheus format
     See https://github.com/kubernetes/apiserver
@@ -117,6 +118,8 @@ class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
             # For Kubernetes >= 1.24
             # https://github.com/kubernetes/kubernetes/pull/107171
             'apiserver_admission_webhook_fail_open_count': self.apiserver_admission_webhook_fail_open_count,
+            # https://github.com/kubernetes/kubernetes/pull/103162
+            'apiserver_admission_webhook_request_total': self.apiserver_admission_webhook_request_total,
         }
         self.kube_apiserver_config = None
 
@@ -128,6 +131,23 @@ class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
             default_namespace="kube_apiserver",
         )
 
+        if instances is not None:
+            for instance in instances:
+                url = instance.get('health_url')
+                prometheus_url = instance.get('prometheus_url')
+
+                if url is None and search(r'/metrics$', prometheus_url):
+                    url = sub(r'/metrics$', '/healthz', prometheus_url)
+
+                instance['health_url'] = url
+
+                slis_instance = self.create_sli_prometheus_instance(instance)
+                instance['sli_scraper_config'] = self.get_scraper_config(slis_instance)
+                if instance.get('slis_available') is None:
+                    instance['slis_available'] = self.detect_sli_endpoint(
+                        self.get_http_handler(instance['sli_scraper_config']), slis_instance.get('prometheus_url')
+                    )
+
     def check(self, instance):
         if self.kube_apiserver_config is None:
             self.kube_apiserver_config = self.get_scraper_config(self.instance)
@@ -136,6 +156,10 @@ class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
             url = self.kube_apiserver_config['prometheus_url']
             raise CheckException("You have to collect at least one metric from the endpoint: {}".format(url))
         self.process(self.kube_apiserver_config, metric_transformers=self.metric_transformers)
+
+        if instance.get('sli_scraper_config') and instance.get('slis_available'):
+            self.log.debug('Processing kube apiserver SLI metrics')
+            self.process(instance['sli_scraper_config'], metric_transformers=self.sli_transformers)
 
     def get_scraper_config(self, instance):
         # Change config before it's cached by parent get_scraper_config
@@ -177,7 +201,7 @@ class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
             # Explicit shallow copy of the instance tags
             _tags = list(scraper_config['custom_tags'])
 
-            for label_name, label_value in iteritems(sample[self.SAMPLE_LABELS]):
+            for label_name, label_value in sample[self.SAMPLE_LABELS].items():
                 _tags.append('{}:{}'.format(label_name, label_value))
             if gauge:
                 # submit raw metric
@@ -221,3 +245,6 @@ class KubeAPIServerMetricsCheck(OpenMetricsBaseCheck):
 
     def apiserver_admission_webhook_fail_open_count(self, metric, scraper_config):
         self.submit_metric('.apiserver_admission_webhook_fail_open_count', metric, scraper_config)
+
+    def apiserver_admission_webhook_request_total(self, metric, scraper_config):
+        self.submit_metric('.apiserver_admission_webhook_request_total', metric, scraper_config)

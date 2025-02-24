@@ -2,7 +2,7 @@
   "manifest_version": "2.0.0",
   "app_uuid": "72d17043-fa30-4f5c-95cb-939906d86fb7",
   "app_id": "nvidia-triton",
-  "display_on_public_website": false,
+  "display_on_public_website": true,
   "tile": {
     "overview": "README.md#Overview",
     "configuration": "README.md#Setup",
@@ -14,12 +14,17 @@
     "classifier_tags": [
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Category::Log Collection",
+      "Category::AI/ML",
+      "Submitted Data Type::Metrics",
+      "Offering::Integration"
     ]
   },
   "assets": {
     "integration": {
       "source_type_name": "Nvidia Triton",
+      "source_type_id": 10416,
       "configuration": {
         "spec": "assets/configuration/spec.yaml"
       },
@@ -36,21 +41,21 @@
       },
       "process_signatures": [
         "tritonserver"
-      ]
+      ],
+      "auto_install": true
     },
-    "dashboards": {"nvidia_triton": "assets/dashboards/nvidia_triton_overview.json"},
+    "dashboards": {
+      "Nvidia Triton Overview": "assets/dashboards/nvidia_triton_overview.json"
+    },
     "monitors": {
-      "[Nvidia Triton] GPU utilization is high": "assets/monitors/gpu_utilization.json",
-      "[Nvidia Triton] CPU Memory Usage is high": "assets/monitors/cpu_memory.json"
-
-    },
-    "logs": {"source": "nvidia_triton"}
-    },
+      "Nvidia Triton GPU Utilization is high!": "assets/monitors/gpu_utilization.json",
+      "Nvidia Triton CPU memory usage is high!": "assets/monitors/cpu_memory.json"
+    }
+  },
   "author": {
     "support_email": "help@datadoghq.com",
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

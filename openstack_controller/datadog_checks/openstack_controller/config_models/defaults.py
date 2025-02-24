@@ -16,6 +16,10 @@ def shared_timeout():
     return 10
 
 
+def instance_all_projects():
+    return False
+
+
 def instance_allow_redirects():
     return True
 
@@ -56,8 +60,16 @@ def instance_disable_generic_tags():
     return False
 
 
+def instance_domain_id():
+    return 'default'
+
+
 def instance_empty_default_hostname():
     return False
+
+
+def instance_endpoint_interface():
+    return 'public'
 
 
 def instance_exclude_network_ids():
@@ -89,7 +101,7 @@ def instance_min_collection_interval():
 
 
 def instance_paginated_limit():
-    return 1000
+    return None
 
 
 def instance_persist_connections():
@@ -126,6 +138,10 @@ def instance_use_agent_proxy():
 
 def instance_use_legacy_auth_encoding():
     return True
+
+
+def instance_use_legacy_check_version():
+    return False
 
 
 def instance_use_shortname():

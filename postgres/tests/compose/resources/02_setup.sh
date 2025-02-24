@@ -4,7 +4,7 @@ set -e
 # pg_monitor is only available on 10+
 # prior to version 10 there was no `pg_read_all_stats` role so by adding a database to which the agent can't connect
 # it causes many of the tests to fail since some stats queries fail (like reading the size of the database to which you can't connect)
-# therefore we will only add this database to which you can't connect in 10+ for testing purposes
+# therefore we will only add this database to which you can't connect in 10+ for testing purposes.
 if [[ !("$PG_MAJOR" == 9.* ) ]]; then
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" datadog_test <<-'EOSQL'
     GRANT pg_monitor TO datadog;
@@ -12,6 +12,7 @@ EOSQL
 fi
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" "datadog_test" <<-'EOSQL'
+    CREATE EXTENSION pg_buffercache SCHEMA public;
     CREATE EXTENSION pg_stat_statements SCHEMA public;
     GRANT SELECT ON pg_stat_statements TO datadog;
 
@@ -85,8 +86,19 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" "$DBNAME" <<-'EOSQL'
     RETURNS NULL ON NULL INPUT
     SECURITY DEFINER;
     ALTER FUNCTION datadog.explain_statement_noaccess(l_query TEXT, OUT explain JSON) OWNER TO datadog;
-EOSQL
 
+    -- create dummy function to be executed to populate function metrics
+    CREATE OR REPLACE FUNCTION dummy_function()
+    RETURNS text AS
+    $$
+    BEGIN
+        RETURN 'Hello, world!';
+    END;
+    $$
+    LANGUAGE 'plpgsql'
+    SECURITY DEFINER;
+    ALTER FUNCTION dummy_function() OWNER TO datadog;
+EOSQL
 done
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" dogs_nofunc <<-'EOSQL'

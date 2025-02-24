@@ -17,7 +17,8 @@
       "Category::Log Collection",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -26,7 +27,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Scylla",
@@ -43,16 +43,15 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10087,
+      "auto_install": true
     },
     "dashboards": {
       "Scylla Overview": "assets/dashboards/overview.json"
     },
     "monitors": {
-      "[Scylla] Server is shutting down": "assets/monitors/instance_down.json"
-    },
-    "logs": {
-      "source": "scylla"
+      "Node State is abnormal": "assets/monitors/instance_down.json"
     }
   }
 }

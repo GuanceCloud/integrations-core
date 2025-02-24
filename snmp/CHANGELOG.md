@@ -2,7 +2,86 @@
 
 <!-- towncrier release notes start -->
 
-## 7.0.1 / 2023-10-26
+## 9.2.0 / 2025-01-25 / Agent 7.63.0
+
+***Added***:
+
+* Update dependencies ([#19430](https://github.com/DataDog/integrations-core/pull/19430))
+
+## 9.1.0 / 2024-11-28 / Agent 7.61.0
+
+***Added***:
+
+* [NDMII-3147] update Cisco IP SLA metric tags and description. ([#19079](https://github.com/DataDog/integrations-core/pull/19079))
+
+## 9.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 8.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 7.5.0 / 2024-09-05
+
+***Added***:
+
+* Bump pysnmp for asyncore and py3.12 compatibility ([#18457](https://github.com/DataDog/integrations-core/pull/18457))
+
+***Fixed***:
+
+* Bump pysnmp version to 4.9.10 ([#18245](https://github.com/DataDog/integrations-core/pull/18245))
+* Use forced metric type of gauge for nasuni-filer filerCacheTotal, filerCacheUsed, and filerCacheFree so they are not incorrectly inferred to be rate types. ([#18501](https://github.com/DataDog/integrations-core/pull/18501))
+
+## 7.4.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 7.3.1 / 2024-06-05 / Agent 7.55.0
+
+***Fixed***:
+
+* Use a forced metric type of gauge for ccmRejectedPhones and ccmUnregisteredPhones so they are not incorrectly inferred to be rate types. ([#17722](https://github.com/DataDog/integrations-core/pull/17722))
+
+## 7.3.0 / 2024-04-26 / Agent 7.54.0
+
+***Added***:
+
+* [SNMP] Add device_hostname tag ([#17433](https://github.com/DataDog/integrations-core/pull/17433))
+
+## 7.2.0 / 2024-02-16 / Agent 7.52.0
+
+***Added***:
+
+* Bump `pycryptodomex` version to 3.19.1 ([#16560](https://github.com/DataDog/integrations-core/pull/16560))
+* Add `device_type` to OOTB profiles ([#16564](https://github.com/DataDog/integrations-core/pull/16564))
+* [SNMP] Add general IPsec profile for Cisco devices ([#16597](https://github.com/DataDog/integrations-core/pull/16597))
+* [SNMP] Add abstract profiles for VoIP ([#16711](https://github.com/DataDog/integrations-core/pull/16711))
+* Update dependencies ([#16788](https://github.com/DataDog/integrations-core/pull/16788))
+* Add ping documentation ([#16881](https://github.com/DataDog/integrations-core/pull/16881))
+
+## 7.1.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Bump the base check version to 32.6.0 ([#16323](https://github.com/DataDog/integrations-core/pull/16323))
+
+## 7.0.1 / 2023-10-26 / Agent 7.50.0
 
 ***Fixed***:
 

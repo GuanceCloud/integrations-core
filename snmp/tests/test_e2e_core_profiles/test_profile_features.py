@@ -24,8 +24,11 @@ def test_e2e_features(dd_agent_check):
     common_tags = [
         'snmp_profile:features',
         'snmp_host:features.device.name',
+        'device_hostname:features.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ]
 
     # --- TEST EXTENDED METRICS ---
@@ -52,6 +55,8 @@ def test_e2e_features(dd_agent_check):
         'profile': 'features',
         'status': 1,
         'sys_object_id': '1.2.3.20231012',
+        'device_type': 'other',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

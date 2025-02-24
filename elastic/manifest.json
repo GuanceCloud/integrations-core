@@ -9,7 +9,7 @@
     "support": "README.md#Support",
     "changelog": "CHANGELOG.md",
     "description": "Monitor overall cluster status down to JVM heap usage and everything in between.",
-    "title": "ElasticSearch",
+    "title": "Elasticsearch",
     "media": [],
     "classifier_tags": [
       "Category::Data Stores",
@@ -17,7 +17,18 @@
       "Category::Tracing",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Submitted Data Type::Metrics",
+      "Submitted Data Type::Logs",
+      "Submitted Data Type::Traces",
+      "Submitted Data Type::Events",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-elasticsearch-performance-metrics"
+      }
     ]
   },
   "author": {
@@ -26,7 +37,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Elasticsearch",
@@ -44,25 +54,26 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["java org.elasticsearch.bootstrap.Elasticsearch"]
+      "process_signatures": [
+        "java org.elasticsearch.bootstrap.Elasticsearch"
+      ],
+      "source_type_id": 37,
+      "auto_install": true
     },
     "dashboards": {
       "elasticsearch": "assets/dashboards/overview.json",
       "elasticsearch_timeboard": "assets/dashboards/metrics.json"
     },
     "monitors": {
-      "[ElasticSearch] Unsuccessful requests rate is high": "assets/monitors/elastic_requests.json",
-      "[ElasticSearch] Query load is high": "assets/monitors/elastic_query_load_high.json",
-      "[ElasticSearch] Time spent on queries is high": "assets/monitors/elastic_query_latency_high.json",
-      "[ElasticSearch] Number of pending tasks is high": "assets/monitors/elastic_pending_tasks_high.json",
-      "[ElasticSearch] Current indexing load is high": "assets/monitors/elastic_indexing_load.json",
-      "[ElasticSearch] Average query latency is high": "assets/monitors/elastic_average_search_latency.json"
+      "Unsuccessful requests rate is high": "assets/monitors/elastic_requests.json",
+      "Query load is high": "assets/monitors/elastic_query_load_high.json",
+      "Latency is high": "assets/monitors/elastic_query_latency_high.json",
+      "Number of pending tasks is high": "assets/monitors/elastic_pending_tasks_high.json",
+      "Current Indexing Load is High": "assets/monitors/elastic_indexing_load.json",
+      "Average Search Query Latency is High": "assets/monitors/elastic_average_search_latency.json"
     },
     "saved_views": {
       "elasticsearch_processes": "assets/saved_views/elasticsearch_processes.json"
-    },
-    "logs": {
-      "source": "elasticsearch"
     }
   }
 }

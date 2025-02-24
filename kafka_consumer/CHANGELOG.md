@@ -2,6 +2,106 @@
 
 <!-- towncrier release notes start -->
 
+## 6.5.0 / 2025-02-13 / Agent 7.63.0
+
+***Added***:
+
+* Bump OpenSSL in confluent-kafka to 3.4.1 on Windows. ([#19608](https://github.com/DataDog/integrations-core/pull/19608))
+
+## 6.4.0 / 2025-02-12
+
+***Added***:
+
+* Bump the OpenSSL version in confluent-kakfa to 3.3.3 on Linux and MacOS. ([#19591](https://github.com/DataDog/integrations-core/pull/19591))
+
+## 6.3.0 / 2025-01-25
+
+***Added***:
+
+* Bump version of `confluent-kafka` to 2.8.0 ([#19370](https://github.com/DataDog/integrations-core/pull/19370))
+* Disable collecting consumer group state by default ([#19411](https://github.com/DataDog/integrations-core/pull/19411))
+
+## 6.2.0 / 2025-01-16
+
+***Added***:
+
+* Add `tls_ciphers` param to integration ([#19334](https://github.com/DataDog/integrations-core/pull/19334))
+
+## 6.1.0 / 2024-11-25 / Agent 7.60.0
+
+***Security***:
+
+* Bump confluent-kafka to 2.6.1 ([#19099](https://github.com/DataDog/integrations-core/pull/19099))
+
+## 6.0.0 / 2024-10-04 / Agent 7.59.0
+
+***Removed***:
+
+* Remove support for Python 2. ([#18580](https://github.com/DataDog/integrations-core/pull/18580))
+
+***Fixed***:
+
+* Bump the version of datadog-checks-base to 37.0.0 ([#18617](https://github.com/DataDog/integrations-core/pull/18617))
+
+## 5.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 4.6.1 / 2024-09-05
+
+***Fixed***:
+
+* Fix a typo when writing to persistent cache to calculate the estimated consumer lag. ([#18307](https://github.com/DataDog/integrations-core/pull/18307))
+
+## 4.6.0 / 2024-08-09 / Agent 7.57.0
+
+***Added***:
+
+* Update dependencies ([#18187](https://github.com/DataDog/integrations-core/pull/18187))
+
+## 4.5.0 / 2024-07-05 / Agent 7.56.0
+
+***Added***:
+
+* Kafka consumer : add consumer group state as tag ([#17686](https://github.com/DataDog/integrations-core/pull/17686))
+
+## 4.4.0 / 2024-06-11 / Agent 7.55.0
+
+***Added***:
+
+* Update `confluent_kafka` and `librdkafka` ([#17726](https://github.com/DataDog/integrations-core/pull/17726))
+
+## 4.3.0 / 2024-03-22 / Agent 7.53.0
+
+***Added***:
+
+* Add consumer lag in seconds metric ([#16889](https://github.com/DataDog/integrations-core/pull/16889))
+
+## 4.2.1 / 2024-02-16 / Agent 7.52.0
+
+***Fixed***:
+
+* Update the `log_level` in librkafka and redirect the logs ([#16677](https://github.com/DataDog/integrations-core/pull/16677))
+
+## 4.2.0 / 2024-01-05 / Agent 7.51.0
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+
+## 4.1.4 / 2023-11-10 / Agent 7.50.0
+
+***Fixed***:
+
+* Attempt client connection before fetching consumer offsets ([#15951](https://github.com/DataDog/integrations-core/pull/15951))
+* Bump librdkafka and confluent-kafka to v2.3.0 ([#16088](https://github.com/DataDog/integrations-core/pull/16088))
+
 ## 4.1.3 / 2023-10-11 / Agent 7.48.1
 
 ***Fixed***:

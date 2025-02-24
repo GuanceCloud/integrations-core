@@ -15,7 +15,8 @@
       "Supported OS::Linux",
       "Supported OS::Windows",
       "Supported OS::macOS",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
     ]
   },
   "assets": {
@@ -39,10 +40,9 @@
         "impalad",
         "catalogd",
         "statestored"
-      ]
-    },
-    "logs": {
-      "source": "impala"
+      ],
+      "source_type_id": 10301,
+      "auto_install": true
     },
     "dashboards": {
       "Impala - Overview": "assets/dashboards/impala_overview.json",
@@ -56,6 +56,5 @@
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

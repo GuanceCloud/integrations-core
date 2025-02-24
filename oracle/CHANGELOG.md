@@ -2,6 +2,45 @@
 
 <!-- towncrier release notes start -->
 
+## 6.0.0 / 2024-10-01 / Agent 7.58.0
+
+***Changed***:
+
+* Bump minimum version of base check ([#18733](https://github.com/DataDog/integrations-core/pull/18733))
+
+***Added***:
+
+* Bump the python version from 3.11 to 3.12 ([#18212](https://github.com/DataDog/integrations-core/pull/18212))
+
+## 5.2.0 / 2024-03-22 / Agent 7.53.0
+
+***Deprecated***:
+
+* Automatically load Oracle core check instead of Python integration. Deprecating Oracle Python integration and replacing it with the core check. ([#17248](https://github.com/DataDog/integrations-core/pull/17248))
+
+***Added***:
+
+* Update custom_queries configuration to support optional collection_interval ([#16957](https://github.com/DataDog/integrations-core/pull/16957))
+* Bump the min base check version to 36.5.0 ([#17197](https://github.com/DataDog/integrations-core/pull/17197))
+
+***Fixed***:
+
+* Support custom metric_prefix in QueryExecutor and remove manual fix of metric_prefix ([#16958](https://github.com/DataDog/integrations-core/pull/16958))
+* Update the configuration to include the `metric_prefix` option ([#17065](https://github.com/DataDog/integrations-core/pull/17065))
+
+## 5.1.1 / 2024-01-10 / Agent 7.51.0
+
+***Fixed***:
+
+* Properly drop support for Python 2 ([#16589](https://github.com/DataDog/integrations-core/pull/16589))
+
+## 5.1.0 / 2024-01-05
+
+***Added***:
+
+* Bump the Python version from py3.9 to py3.11 ([#15997](https://github.com/DataDog/integrations-core/pull/15997))
+* Update dependencies ([#16502](https://github.com/DataDog/integrations-core/pull/16502))
+
 ## 5.0.0 / 2023-08-10 / Agent 7.48.0
 
 ***Changed***:

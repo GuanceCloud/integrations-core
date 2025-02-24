@@ -4,8 +4,8 @@
 import contextlib
 import logging
 
-import mock
 import pytest
+from mock import MagicMock, mock, patch
 from pyVmomi import vim, vmodl
 
 from datadog_checks.base import AgentCheck, ConfigurationError
@@ -26,6 +26,13 @@ pytestmark = [pytest.mark.unit]
 @contextlib.contextmanager
 def does_not_raise(enter_result=None):
     yield enter_result
+
+
+@pytest.fixture(autouse=True)
+def mock_vsan_stub():
+    with patch('vsanapiutils.GetVsanVcStub') as GetStub:
+        GetStub._stub.host = '0.0.0.0'
+        yield GetStub
 
 
 def test_log_deprecation_warning(dd_run_check, caplog, default_instance):
@@ -591,6 +598,45 @@ def test_report_realtime_vm_percent_metrics(aggregator, dd_run_check, realtime_i
     dd_run_check(check)
     aggregator.assert_metric(
         'vsphere.cpu.usage.avg',
+        value=52.99,
+        count=1,
+        hostname='vm1',
+        tags=['vcenter_server:FAKE'],
+    )
+
+
+def test_report_realtime_vm_vcpu_percent_metrics(aggregator, dd_run_check, realtime_instance, service_instance):
+    service_instance.content.perfManager.QueryPerfCounterByLevel = mock.MagicMock(
+        return_value=[
+            vim.PerformanceManager.CounterInfo(
+                key=33,
+                groupInfo=vim.ElementDescription(key='cpu'),
+                nameInfo=vim.ElementDescription(key='usage.vcpus'),
+                rollupType=vim.PerformanceManager.CounterInfo.RollupType.average,
+                unitInfo=vim.ElementDescription(key='percent'),
+            ),
+        ]
+    )
+    service_instance.content.perfManager.QueryPerf = mock.MagicMock(
+        side_effect=[
+            [
+                vim.PerformanceManager.EntityMetric(
+                    entity=vim.VirtualMachine(moId="vm1"),
+                    value=[
+                        vim.PerformanceManager.IntSeries(
+                            value=[5299],
+                            id=vim.PerformanceManager.MetricId(counterId=33),
+                        )
+                    ],
+                ),
+            ],
+            [],
+        ]
+    )
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+    aggregator.assert_metric(
+        'vsphere.cpu.usage.vcpus.avg',
         value=52.99,
         count=1,
         hostname='vm1',
@@ -2319,7 +2365,7 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
     base_tags_vm1 = base_tags + ['vsphere_host:host1']
     base_tags_vm3 = base_tags + ['vsphere_host:host2']
 
-    realtime_instance['excluded_host_tags'] = ['vsphere_host']
+    realtime_instance['excluded_host_tags'] = ['vsphere_host', 'vsphere_type', 'vsphere_folder']
     check = VSphereCheck('vsphere', {}, [realtime_instance])
     caplog.set_level(logging.DEBUG)
     dd_run_check(check)
@@ -2333,9 +2379,9 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
         hostname='vm1',
     )
     assert (
-        "Could not sumbit property metric- no metric data: name=`vm.guest.guestFullName`, "
-        "value=`None`, hostname=`vm1`, base tags=`['vcenter_server:FAKE', 'vsphere_host:host1', "
-        "'vsphere_folder:unknown', 'vsphere_type:vm']` additional tags=`{}`"
+        "Could not submit property metric- no metric data: name=`vm.guest.guestFullName`, "
+        "value=`None`, hostname=`vm1`, base tags=`['vsphere_host:host1', 'vsphere_folder:unknown', "
+        "'vsphere_type:vm', 'vcenter_server:FAKE']` additional tags=`{}`"
     ) in caplog.text
 
     aggregator.assert_metric(
@@ -2393,9 +2439,9 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
         hostname='vm1',
     )
     assert (
-        "Could not sumbit property metric- no metric data: name=`vm.guest.toolsRunningStatus`, "
-        "value=`None`, hostname=`vm1`, base tags=`['vcenter_server:FAKE', 'vsphere_host:host1', "
-        "'vsphere_folder:unknown', 'vsphere_type:vm']` additional tags=`{}`"
+        "Could not submit property metric- no metric data: name=`vm.guest.toolsRunningStatus`, "
+        "value=`None`, hostname=`vm1`, base tags=`['vsphere_host:host1', 'vsphere_folder:unknown', "
+        "'vsphere_type:vm', 'vcenter_server:FAKE']` additional tags=`{}`"
     ) in caplog.text
 
     aggregator.assert_metric(
@@ -2475,8 +2521,8 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
 
     assert (
         "Submit property metric: name=`vm.config.memoryAllocation.limit`, value=`-1.0`, "
-        "hostname=`vm1`, tags=`['vcenter_server:FAKE', 'vsphere_host:host1', "
-        "'vsphere_folder:unknown', 'vsphere_type:vm']`, count=`False`"
+        "hostname=`vm1`, tags=`['vsphere_host:host1', 'vsphere_folder:unknown', "
+        "'vsphere_type:vm', 'vcenter_server:FAKE']`, count=`False`"
     ) in caplog.text
 
     aggregator.assert_metric(
@@ -2485,10 +2531,10 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
         hostname='vm1',
     )
     assert (
-        "Could not sumbit property metric- unexpected metric value: "
+        "Could not submit property metric- unexpected metric value: "
         "name=`vm.config.cpuAllocation.overheadLimit`, value=`None`, hostname=`vm1`, "
-        "base tags=`['vcenter_server:FAKE', 'vsphere_host:host1', 'vsphere_folder:unknown', "
-        "'vsphere_type:vm']` additional tags=`{}`"
+        "base tags=`['vsphere_host:host1', 'vsphere_folder:unknown', "
+        "'vsphere_type:vm', 'vcenter_server:FAKE']` additional tags=`{}`"
     ) in caplog.text
 
     aggregator.assert_metric(
@@ -2497,10 +2543,10 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
         hostname='vm1',
     )
     assert (
-        "Could not sumbit property metric- unexpected metric value: "
+        "Could not submit property metric- unexpected metric value: "
         "name=`vm.config.memoryAllocation.overheadLimit`, value=`None`, hostname=`vm1`, "
-        "base tags=`['vcenter_server:FAKE', 'vsphere_host:host1', 'vsphere_folder:unknown', "
-        "'vsphere_type:vm']` additional tags=`{}`"
+        "base tags=`['vsphere_host:host1', 'vsphere_folder:unknown', "
+        "'vsphere_type:vm', 'vcenter_server:FAKE']` additional tags=`{}`"
     ) in caplog.text
 
     # VM 3
@@ -2559,9 +2605,9 @@ def test_vm_property_metrics(aggregator, realtime_instance, dd_run_check, caplog
         hostname='vm3',
     )
     assert (
-        "Could not sumbit property metric- unexpected metric value: name=`vm.summary.config.memorySizeMB`, "
-        "value=`None`, hostname=`vm3`, base tags=`['vcenter_server:FAKE', 'vsphere_host:host2', "
-        "'vsphere_folder:unknown', 'vsphere_type:vm']` additional tags=`{}`"
+        "Could not submit property metric- unexpected metric value: name=`vm.summary.config.memorySizeMB`, "
+        "value=`None`, hostname=`vm3`, base tags=`['vsphere_host:host2', "
+        "'vsphere_folder:unknown', 'vsphere_type:vm', 'vcenter_server:FAKE']` additional tags=`{}`"
     ) in caplog.text
 
     aggregator.assert_metric(
@@ -2672,7 +2718,7 @@ def test_host_property_metrics(aggregator, realtime_instance, dd_run_check, capl
     aggregator.assert_metric(
         'vsphere.host.summary.runtime.inMaintenanceMode',
         count=1,
-        value=1,
+        value=0,
         tags=base_tags_host + ["inMaintenanceMode:False"],
         hostname='host1',
     )
@@ -2692,9 +2738,9 @@ def test_host_property_metrics(aggregator, realtime_instance, dd_run_check, capl
     )
 
     assert (
-        "Could not sumbit property metric- no metric data: "
+        "Could not submit property metric- no metric data: "
         "name=`host.hardware.cpuPowerManagementInfo.currentPolicy`, value=`None`, "
-        "hostname=`host2`, base tags=`['vcenter_server:FAKE', 'vsphere_type:host']` "
+        "hostname=`host2`, base tags=`['vsphere_type:host', 'vcenter_server:FAKE']` "
         "additional tags=`{}`"
     ) in caplog.text
 
@@ -2725,26 +2771,59 @@ def test_host_property_metrics(aggregator, realtime_instance, dd_run_check, capl
     aggregator.assert_metric('vsphere.cpu.costop.sum', count=1, hostname='host2')
 
 
-def test_cluster_property_metrics(aggregator, historical_instance, dd_run_check, service_instance, vm_properties_ex):
+def test_cluster_property_metrics(
+    aggregator, historical_instance, dd_run_check, service_instance, vm_properties_ex, caplog
+):
     historical_instance['collect_property_metrics'] = True
-
+    caplog.set_level(logging.DEBUG)
     service_instance.content.propertyCollector.RetrievePropertiesEx = vm_properties_ex
-    base_tags = ['vcenter_server:FAKE', 'vsphere_cluster:c1', 'vsphere_type:cluster']
+    base_tags = ['vcenter_server:FAKE', 'vsphere_type:cluster']
+    base_tags_cluster_1 = base_tags + ['vsphere_cluster:c1']
+    base_tags_cluster_2 = base_tags + ['vsphere_cluster:c2']
+
     check = VSphereCheck('vsphere', {}, [historical_instance])
     dd_run_check(check)
+
+    # cluster 1
     aggregator.assert_metric(
-        'vsphere.cluster.configuration.drsConfig.enabled', count=1, value=1, tags=base_tags + ['enabled:True']
+        'vsphere.cluster.configuration.drsConfig.enabled', count=1, value=1, tags=base_tags_cluster_1 + ['enabled:True']
     )
     aggregator.assert_metric(
-        'vsphere.cluster.configuration.dasConfig.enabled', count=1, value=1, tags=base_tags + ['enabled:True']
+        'vsphere.cluster.configuration.dasConfig.enabled', count=1, value=1, tags=base_tags_cluster_1 + ['enabled:True']
     )
     aggregator.assert_metric(
         'vsphere.cluster.configuration.drsConfig.defaultVmBehavior',
         count=1,
         value=1,
-        tags=base_tags + ['defaultVmBehavior:fullyAutomated'],
+        tags=base_tags_cluster_1 + ['defaultVmBehavior:fullyAutomated'],
     )
-    aggregator.assert_metric('vsphere.cluster.configuration.drsConfig.vmotionRate', count=1, value=2, tags=base_tags)
+    aggregator.assert_metric(
+        'vsphere.cluster.configuration.drsConfig.vmotionRate', count=1, value=2, tags=base_tags_cluster_1
+    )
+
+    # cluster 2
+    aggregator.assert_metric(
+        'vsphere.cluster.configuration.drsConfig.enabled',
+        count=1,
+        value=0,
+        tags=base_tags_cluster_2 + ['enabled:False'],
+    )
+    aggregator.assert_metric(
+        'vsphere.cluster.configuration.dasConfig.enabled',
+        count=1,
+        value=0,
+        tags=base_tags_cluster_2 + ['enabled:False'],
+    )
+    aggregator.assert_metric(
+        'vsphere.cluster.configuration.drsConfig.defaultVmBehavior',
+        count=1,
+        value=1,
+        tags=base_tags_cluster_2 + ['defaultVmBehavior:fullyAutomated'],
+    )
+    aggregator.assert_metric(
+        'vsphere.cluster.configuration.drsConfig.vmotionRate', count=1, value=1, tags=base_tags_cluster_2
+    )
+    assert "Could not retrieve properties" not in caplog.text
 
 
 def test_datastore_property_metrics(aggregator, historical_instance, dd_run_check, service_instance, vm_properties_ex):
@@ -2947,8 +3026,10 @@ def test_property_metrics_metric_filters(
     aggregator.assert_metric('datadog.vsphere.refresh_infrastructure_cache.time')
     aggregator.assert_metric('datadog.vsphere.refresh_metrics_metadata_cache.time')
     aggregator.assert_metric('datadog.vsphere.query_metrics.time')
+    aggregator.assert_metric('vsphere.datacenter.count')
     aggregator.assert_metric('vsphere.cpu.totalmhz.avg')
     aggregator.assert_metric('vsphere.datastore.busResets.sum')
+    aggregator.assert_metric('vsphere.vmop.numChangeDS.latest')
     aggregator.assert_all_metrics_covered()
 
 
@@ -3035,3 +3116,853 @@ def test_property_metrics_expired_cache(
             tags=base_tags_host + ["currentPolicy:Balanced"],
             hostname='host1',
         )
+
+
+def test_property_metrics_invalid_ip_config(
+    aggregator, realtime_instance, dd_run_check, service_instance, vm_invalid_properties_ex
+):
+    realtime_instance['collect_property_metrics'] = True
+
+    service_instance.content.propertyCollector.RetrievePropertiesEx = vm_invalid_properties_ex
+
+    base_tags = ['vcenter_server:FAKE', 'vsphere_folder:unknown', 'vsphere_type:vm', 'vsphere_host:unknown']
+
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+    aggregator.assert_metric('vsphere.vm.count', value=1, count=1, tags=base_tags)
+
+    aggregator.assert_metric(
+        'vsphere.vm.guest.net',
+        count=1,
+        value=1,
+        tags=base_tags + ['device_id:0', 'is_connected:True', 'nic_mac_address:00:61:58:72:53:13'],
+        hostname='vm1',
+    )
+
+    aggregator.assert_metric(
+        'vsphere.vm.guest.net.ipConfig.address',
+        count=0,
+        hostname='vm1',
+    )
+
+
+def test_property_metrics_invalid_ip_route_config(
+    aggregator, realtime_instance, dd_run_check, service_instance, vm_invalid_properties_ex
+):
+    realtime_instance['collect_property_metrics'] = True
+
+    service_instance.content.propertyCollector.RetrievePropertiesEx = vm_invalid_properties_ex
+
+    base_tags = ['vcenter_server:FAKE', 'vsphere_folder:unknown', 'vsphere_type:vm', 'vsphere_host:unknown']
+
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+    aggregator.assert_metric('vsphere.vm.count', value=1, count=1, tags=base_tags)
+
+    aggregator.assert_metric(
+        'vsphere.vm.guest.ipStack.ipRoute',
+        count=0,
+        hostname='vm1',
+    )
+
+
+def test_property_metrics_invalid_ip_route_config_gateway(
+    aggregator, realtime_instance, dd_run_check, service_instance, vm_invalid_gateway_properties_ex
+):
+    realtime_instance['collect_property_metrics'] = True
+
+    service_instance.content.propertyCollector.RetrievePropertiesEx = vm_invalid_gateway_properties_ex
+
+    base_tags = ['vcenter_server:FAKE', 'vsphere_folder:unknown', 'vsphere_type:vm', 'vsphere_host:unknown']
+
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+    aggregator.assert_metric('vsphere.vm.count', value=1, count=1, tags=base_tags)
+
+    aggregator.assert_metric(
+        'vsphere.vm.guest.ipStack.ipRoute',
+        count=1,
+        value=1,
+        tags=base_tags + ['network_dest_ip:fe83::', 'prefix_length:32'],
+        hostname='vm1',
+    )
+
+
+def test_property_metrics_excluded_host_tags(
+    aggregator, realtime_instance, dd_run_check, service_instance, vm_properties_ex, datadog_agent
+):
+    realtime_instance['collect_property_metrics'] = True
+
+    service_instance.content.propertyCollector.RetrievePropertiesEx = vm_properties_ex
+
+    realtime_instance['excluded_host_tags'] = ['vsphere_host', 'vsphere_folder']
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+
+    aggregator.assert_metric(
+        'vsphere.vm.summary.quickStats.uptimeSeconds',
+        count=1,
+        value=12184573.0,
+        tags=['vcenter_server:FAKE', 'vsphere_folder:unknown', 'vsphere_host:host1'],
+        hostname='vm1',
+    )
+    datadog_agent.assert_external_tags(
+        'vm1',
+        {'vsphere': ['vcenter_server:FAKE', 'vsphere_type:vm']},
+    )
+    aggregator.assert_metric(
+        'vsphere.host.hardware.cpuPowerManagementInfo.currentPolicy',
+        count=1,
+        value=1,
+        tags=['currentPolicy:Balanced', 'vcenter_server:FAKE'],
+        hostname='host1',
+    )
+    datadog_agent.assert_external_tags(
+        'host1',
+        {'vsphere': ['vcenter_server:FAKE', 'vsphere_type:host']},
+    )
+
+
+@pytest.mark.parametrize(
+    ('max_query_metrics', 'metrics_per_query', 'max_historical_metrics', 'expected_batch_num'),
+    [
+        pytest.param(
+            None,
+            None,
+            None,
+            4,
+            id='defaults',
+        ),
+        pytest.param(
+            1000,
+            1000,
+            1000,
+            4,
+            id='High custom settings',
+        ),
+        pytest.param(
+            None,
+            None,
+            1,
+            7,
+            id='lowest max historical metrics',
+        ),
+        pytest.param(
+            1,
+            None,
+            None,
+            7,
+            id='lowest max query metrics',
+        ),
+        pytest.param(
+            -1,
+            1000,
+            1,
+            7,
+            id='negative max query metrics but low max historical',
+        ),
+        pytest.param(
+            -1,
+            1000,
+            1000,
+            4,
+            id='negative max query metrics',
+        ),
+        pytest.param(
+            -1,
+            -1,
+            1,
+            7,
+            id='negative max query metrics and metrics per query',
+        ),
+        pytest.param(
+            -1,
+            -1,
+            -1,
+            4,
+            id='all negative',
+        ),
+        pytest.param(
+            -1,
+            -1,
+            2,
+            5,
+            id='larger than 1 batch size',
+        ),
+        pytest.param(
+            -1,
+            1,
+            1000,
+            7,
+            id='smaller max query metrics',
+        ),
+        pytest.param(
+            None,
+            None,
+            -1,
+            4,
+            id='negative max historical metrics',
+        ),
+        pytest.param(
+            1,
+            None,
+            -1,
+            7,
+            id='negative max historical metrics but low max query metrics ',
+        ),
+        pytest.param(
+            10,
+            None,
+            -1,
+            4,
+            id='negative max historical metrics and high max query metrics ',
+        ),
+        pytest.param(
+            1,
+            1,
+            1,
+            7,
+            id='multiple historical batches',
+        ),
+    ],
+)
+def test_make_batch_historical(
+    aggregator,
+    dd_run_check,
+    historical_instance,
+    service_instance,
+    max_query_metrics,
+    expected_batch_num,
+    metrics_per_query,
+    max_historical_metrics,
+):
+
+    # based on PERF_COUNTER_INFO: there are 7 metrics- counter IDs 100- 106
+    # 1 cluster metric, 1 datacenter metric, and 3 datastore metrics
+    #
+    # based on PROPERTIES_EX: there are 5 resources- 2 datacenters, 1 cluster, and 1 datastore
+    # counter 103 and 104 are realtime metrics
+
+    # counter 102 is a datacener and cluster metric
+    # 101 is a cluster metric
+    # 100 105 106 are datastore metrics
+
+    # in total, there are 7 metrics to query for, so that is the largest amount of batches
+    # the smallest number of batches is 4, 1 for all datastores + 1 for all datacenters + 1 for each cluster metric
+
+    if max_query_metrics is not None:
+        service_instance.content.setting.QueryOptions = mock.MagicMock(
+            return_value=[mock.MagicMock(value=max_query_metrics)]
+        )
+    if metrics_per_query is not None:
+        historical_instance['metrics_per_query'] = metrics_per_query
+    if max_historical_metrics is not None:
+        historical_instance['max_historical_metrics'] = max_historical_metrics
+
+    check = VSphereCheck('vsphere', {}, [historical_instance])
+    dd_run_check(check)
+    num_calls = service_instance.content.perfManager.QueryPerf.call_count
+    assert num_calls == expected_batch_num
+
+    # confirm some metrics are still collected
+    aggregator.assert_metric(
+        'vsphere.cpu.totalmhz.avg',
+        count=1,
+        value=5,
+        tags=['vcenter_server:FAKE', 'vsphere_cluster:c1', 'vsphere_type:cluster'],
+    )
+
+    aggregator.assert_metric(
+        'vsphere.datastore.busResets.sum',
+        count=1,
+        value=5,
+        tags=['vcenter_server:FAKE', 'vsphere_datastore:ds1', 'vsphere_type:datastore'],
+    )
+
+    aggregator.assert_metric(
+        'vsphere.vmop.numChangeDS.latest',
+        count=1,
+        value=7,
+        tags=['vcenter_server:FAKE', 'vsphere_datacenter:dc1', 'vsphere_type:datacenter'],
+    )
+
+
+@pytest.mark.parametrize(
+    ('max_query_metrics', 'metrics_per_query', 'max_historical_metrics', 'expected_batch_num'),
+    [
+        pytest.param(
+            None,
+            None,
+            None,
+            2,
+            id='defaults',
+        ),
+        pytest.param(
+            1,
+            None,
+            None,
+            2,
+            id='small max_query_metrics',
+        ),
+        pytest.param(
+            1,
+            1,
+            1,
+            6,
+            id='small max_query_metrics and historical metric',
+        ),
+        pytest.param(
+            None,
+            None,
+            1,
+            2,
+            id='ignore max_historical_metrics',
+        ),
+    ],
+)
+def test_make_batch_realtime(
+    aggregator,
+    dd_run_check,
+    realtime_instance,
+    service_instance,
+    max_query_metrics,
+    expected_batch_num,
+    metrics_per_query,
+    max_historical_metrics,
+):
+
+    if max_query_metrics is not None:
+        service_instance.content.setting.QueryOptions = mock.MagicMock(
+            return_value=[mock.MagicMock(value=max_query_metrics)]
+        )
+    if metrics_per_query is not None:
+        realtime_instance['metrics_per_query'] = metrics_per_query
+    if max_historical_metrics is not None:
+        realtime_instance['max_historical_metrics'] = max_historical_metrics
+
+    # there are 2 VMs, 1 host, and 2 metrics- so 2 * 2 + 2 * 1 = 6 max batches and 2 min batches
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+    dd_run_check(check)
+    num_calls = service_instance.content.perfManager.QueryPerf.call_count
+    assert num_calls == expected_batch_num
+
+    aggregator.assert_metric(
+        'vsphere.cpu.costop.sum',
+        value=61,
+        count=1,
+        hostname='host1',
+        tags=['vcenter_server:FAKE'],
+    )
+    aggregator.assert_metric(
+        'vsphere.cpu.costop.sum',
+        value=52,
+        count=1,
+        hostname='vm1',
+        tags=['vcenter_server:FAKE'],
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api")
+def test_vsan_metrics_included_in_check(aggregator, realtime_instance, dd_run_check, caplog):
+    realtime_instance['collect_vsan_data'] = True
+    caplog.set_level(logging.DEBUG)
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    mock_cluster = MagicMock()
+    mock_host = MagicMock()
+    mock_cluster.name = 'hello'
+    mock_cluster.configurationEx.vsanConfigInfo.enabled = True
+    mock_cluster.host = [mock_host]
+    mock_host.name = 'world'
+    mock_host.configManager.vsanSystem.config.clusterInfo.nodeUuid = 'TestHostUUID'
+    mock_infrastructure_cache = MagicMock()
+    check.infrastructure_cache = mock_infrastructure_cache
+    mock_infrastructure_cache.get_mors.return_value = [mock_cluster, mock_host]
+    mock_infrastructure_cache.get_mor_tags.return_value = ['random:tags']
+    mock_infrastructure_cache.get_mor_props.return_value = {
+        'tags': ['vsphere_host:world', 'vsphere_folder:example_folder', 'vsphere_cluster:hello']
+    }
+
+    dd_run_check(check)
+
+    assert "No information returned for entity type" in caplog.text
+    aggregator.assert_metric('datadog.vsphere.vsan.cluster.time', metric_type=aggregator.GAUGE, count=1)
+    aggregator.assert_metric('vsphere.vsan.cluster.health.count', count=1)
+    aggregator.assert_metric('vsphere.vsan.cluster.oio', count=1, tags=[])
+    aggregator.assert_metric(
+        'vsphere.vsan.host.congestion',
+        count=0,
+        value=0.03,
+        tags=[],
+    )
+
+    assert "Skipping metric unmapCongestion because it is not in the list of metrics to collect" in caplog.text
+    assert "Skipping metric latencyStddev because it is not in the list of metrics to collect" in caplog.text
+    aggregator.assert_metric('vsphere.vsan.cluster.unmapCongestion', count=0)
+    aggregator.assert_metric('vsphere.vsan.host.latencyStddev', count=0)
+    aggregator.assert_metric('vsphere.vsan.cluster.example_cluster_metric', count=0)
+    aggregator.assert_metric(
+        'vsphere.vsan.host.example_host_metric',
+        count=0,
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api")
+def test_vsan_excluded_host_tags(aggregator, realtime_instance, dd_run_check):
+    realtime_instance['collect_vsan_data'] = True
+    realtime_instance['excluded_host_tags'] = ['vsphere_host', 'vsphere_folder']
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    mock_cluster = MagicMock()
+    mock_host = MagicMock()
+    mock_cluster.name = 'hello'
+    mock_cluster.configurationEx.vsanConfigInfo.enabled = True
+    mock_cluster.host = [mock_host]
+    mock_host.name = 'world'
+    mock_host.configManager.vsanSystem.config.clusterInfo.nodeUuid = 'TestHostUUID'
+    mock_infrastructure_cache = MagicMock()
+    check.infrastructure_cache = mock_infrastructure_cache
+    mock_infrastructure_cache.get_mors.return_value = [mock_cluster, mock_host]
+    mock_infrastructure_cache.get_mor_tags.return_value = ['random:tags']
+    mock_infrastructure_cache.get_mor_props.return_value = {
+        'tags': ['vsphere_host:world', 'vsphere_folder:example_folder', 'vsphere_cluster:hello']
+    }
+
+    dd_run_check(check)
+    aggregator.assert_metric('datadog.vsphere.vsan.cluster.time', metric_type=aggregator.GAUGE, count=1)
+    aggregator.assert_metric('vsphere.vsan.cluster.health.count', count=1)
+    aggregator.assert_metric('vsphere.vsan.cluster.oio', count=1, tags=[])
+    aggregator.assert_metric(
+        'vsphere.vsan.host.congestion',
+        count=1,
+        value=0.01,
+        tags=['vcenter_server:FAKE', 'vsphere_folder:example_folder', 'vsphere_host:world'],
+        hostname='world',
+    )
+    aggregator.assert_metric(
+        'vsphere.vsan.host.congestion',
+        count=0,
+        value=0.01,
+        tags=['vcenter_server:FAKE', 'vsphere_folder:example_folder', 'vsphere_host:world', 'vsphere_cluster:hello'],
+        hostname='world',
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api")
+def test_vsan_metrics_exception(realtime_instance, dd_run_check, caplog):
+    with mock.patch('datadog_checks.vsphere.VSphereCheck.query_vsan_metrics', side_effect=Exception):
+        realtime_instance['collect_vsan_data'] = True
+        caplog.set_level(logging.WARNING)
+        check = VSphereCheck('vsphere', {}, [realtime_instance])
+        dd_run_check(check)
+        assert "Unable to fetch vSAN metrics" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api")
+def test_non_vsan_cluster(realtime_instance, dd_run_check, caplog):
+    realtime_instance['collect_vsan_data'] = True
+    caplog.set_level(logging.DEBUG)
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    mock_cluster = MagicMock()
+    mock_infrastructure_cache = MagicMock()
+    check.infrastructure_cache = mock_infrastructure_cache
+    mock_infrastructure_cache.get_mors.return_value = [mock_cluster]
+    mock_cluster.name = 'hello'
+    mock_cluster.configurationEx.vsanConfigInfo.enabled = False
+
+    dd_run_check(check)
+    assert "Skipping vsan metrics for cluster hello because it is not a vsan cluster" in caplog.text
+    assert "There are no vsan clusters to collect metrics from, skipping vsan collection" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api")
+def test_vsan_cluster_with_host_filtered(realtime_instance, dd_run_check, caplog):
+    realtime_instance['collect_vsan_data'] = True
+    realtime_instance['resource_filters'] = [
+        {'resource': 'host', 'property': 'name', 'type': 'blacklist', 'patterns': [r'.*']},
+    ]
+    caplog.set_level(logging.DEBUG)
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    mock_cluster = MagicMock()
+    mock_host = MagicMock()
+    mock_infrastructure_cache = MagicMock()
+    check.infrastructure_cache = mock_infrastructure_cache
+    mock_infrastructure_cache.get_mors.return_value = [mock_cluster]
+    mock_cluster.name = 'hello'
+    mock_cluster.configurationEx.vsanConfigInfo.enabled = True
+    mock_cluster.host = [mock_host]
+    mock_host.name = 'world'
+
+    dd_run_check(check)
+    assert "Skipping host world because it was filtered" in caplog.text
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api", "mock_rest_api")
+def test_hostname_case_lower(aggregator, realtime_instance, dd_run_check, datadog_agent):
+    realtime_instance['hostname_transform'] = 'lower'
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    dd_run_check(check)
+    aggregator.assert_metric(
+        'datadog.vsphere.collect_events.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_metrics_metadata_cache.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_infrastructure_cache.time',
+        tags=['collect_property_metrics:False', 'vcenter_server:FAKE'],
+        hostname='stubbed.hostname',
+    )
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-5')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-15')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-19')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-6')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-7')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-8')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='$vm3-2')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm3-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-6')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-7')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-8')
+    datadog_agent.assert_external_tags(
+        'vm4-5',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-15',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-19',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-6',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-7',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-8',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api", "mock_rest_api")
+def test_hostname_case_upper(aggregator, realtime_instance, dd_run_check, datadog_agent):
+    realtime_instance['hostname_transform'] = 'upper'
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    dd_run_check(check)
+    aggregator.assert_metric(
+        'datadog.vsphere.collect_events.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_metrics_metadata_cache.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_infrastructure_cache.time',
+        tags=['collect_property_metrics:False', 'vcenter_server:FAKE'],
+        hostname='stubbed.hostname',
+    )
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-5')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-15')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-19')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-6')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-7')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-8')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='$VM3-2')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM3-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM4-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM4-6')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM4-7')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM4-8')
+    datadog_agent.assert_external_tags(
+        'VM4-5',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-15',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-19',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-6',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-7',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-8',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api", "mock_rest_api")
+def test_hostname_case_no_case_change(aggregator, realtime_instance, dd_run_check, datadog_agent):
+    check = VSphereCheck('vsphere', {}, [realtime_instance])
+
+    dd_run_check(check)
+    aggregator.assert_metric(
+        'datadog.vsphere.collect_events.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_metrics_metadata_cache.time', tags=['vcenter_server:FAKE'], hostname='stubbed.hostname'
+    )
+    aggregator.assert_metric(
+        'datadog.vsphere.refresh_infrastructure_cache.time',
+        tags=['collect_property_metrics:False', 'vcenter_server:FAKE'],
+        hostname='stubbed.hostname',
+    )
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-5')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-15')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='VM4-19')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-6')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-7')
+    aggregator.assert_metric('vsphere.cpu.usage.avg', tags=['vcenter_server:FAKE'], hostname='vm4-8')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='$VM3-2')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM3-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='VM4-1')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-6')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-7')
+    aggregator.assert_metric('vsphere.mem.entitlement.avg', tags=['vcenter_server:FAKE'], hostname='vm4-8')
+    datadog_agent.assert_external_tags(
+        'VM4-5',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-15',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'VM4-19',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-6',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-7',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+    datadog_agent.assert_external_tags(
+        'vm4-8',
+        {
+            'vsphere': [
+                'vcenter_server:FAKE',
+                'vsphere_cluster:Cluster2',
+                'vsphere_datacenter:Datacenter2',
+                'vsphere_folder:Datacenters',
+                'vsphere_folder:Discovered virtual machine',
+                'vsphere_folder:vm',
+                'vsphere_host:10.0.0.104',
+                'vsphere_type:vm',
+            ]
+        },
+    )
+
+
+@pytest.mark.usefixtures("mock_type", "mock_threadpool", "mock_api", "mock_rest_api")
+def test_hostname_case_invalid_value(realtime_instance):
+    realtime_instance['hostname_transform'] = 'something else'
+    with pytest.raises(ConfigurationError):
+        _ = VSphereCheck('vsphere', {}, [realtime_instance])

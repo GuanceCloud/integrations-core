@@ -71,7 +71,7 @@ class InstanceConfig(BaseModel):
     empty_default_hostname: Optional[bool] = None
     extra_headers: Optional[MappingProxyType[str, Any]] = None
     headers: Optional[MappingProxyType[str, Any]] = None
-    http_response_status_code: Optional[str] = None
+    http_response_status_code: Optional[Union[str, int]] = None
     include_content: Optional[bool] = None
     include_default_headers: Optional[bool] = None
     kerberos_auth: Optional[str] = None
@@ -103,6 +103,7 @@ class InstanceConfig(BaseModel):
     timeout: Optional[float] = None
     tls_ca_cert: Optional[str] = None
     tls_cert: Optional[str] = None
+    tls_ciphers: Optional[tuple[str, ...]] = None
     tls_ignore_warning: Optional[bool] = None
     tls_private_key: Optional[str] = None
     tls_private_key_password: Optional[str] = None

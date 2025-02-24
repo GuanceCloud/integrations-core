@@ -17,7 +17,8 @@
       "Category::Security",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -26,7 +27,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "SonarQube",
@@ -43,19 +43,22 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "process_signatures": [
+        "java org.sonar.server.app.WebServer",
+        "java org.sonar.ce.app.CeServer"
+      ],
+      "source_type_id": 10132,
+      "auto_install": true
     },
     "dashboards": {
       "Sonarqube Overview": "assets/dashboards/overview.json"
     },
     "monitors": {
-      "SonarQube vulnerabilities": "assets/monitors/vulnerabilities.json"
+      "Sonarqube has vulnerabilities": "assets/monitors/vulnerabilities.json"
     },
     "saved_views": {
       "status_overview": "assets/saved_views/status_overview.json"
-    },
-    "logs": {
-      "source": "sonarqube"
     }
   }
 }

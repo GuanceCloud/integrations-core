@@ -17,7 +17,8 @@
       "Category::Network",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
     ]
   },
   "author": {
@@ -26,7 +27,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "SingleStore",
@@ -44,18 +44,19 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["memsqld"]
+      "process_signatures": [
+        "memsqld"
+      ],
+      "source_type_id": 10215,
+      "auto_install": true
     },
     "dashboards": {
       "Singlestore Overview": "assets/dashboards/overview.json"
     },
     "monitors": {
-      "[SingleStore] License expiration": "assets/monitors/license_expiration.json",
-      "[SingleStore] Read failures rate": "assets/monitors/read_failures.json",
-      "[SingleStore] Write failures rate": "assets/monitors/write_failures.json"
-    },
-    "logs": {
-      "source": "singlestore"
+      "License will expire soon": "assets/monitors/license_expiration.json",
+      "Read queries failure rate is high": "assets/monitors/read_failures.json",
+      "Write queries failure rate is high": "assets/monitors/write_failures.json"
     }
   }
 }

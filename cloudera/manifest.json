@@ -15,7 +15,16 @@
       "Category::Cloud",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Category::Data Stores",
+      "Submitted Data Type::Metrics",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/cloudera-integration-announcement/"
+      }
     ]
   },
   "assets": {
@@ -37,13 +46,15 @@
       },
       "process_signatures": [
         "cdp"
-      ]
+      ],
+      "source_type_id": 10318,
+      "auto_install": true
     },
     "dashboards": {
       "Cloudera Data Platform Overview": "assets/dashboards/cloudera_overview.json"
     },
     "monitors": {
-      "Cloudera High CPU Usage": "assets/monitors/cloudera_high_cpu.json"
+      "Cloudera CPU usage is high": "assets/monitors/cloudera_high_cpu.json"
     }
   },
   "author": {
@@ -51,6 +62,5 @@
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

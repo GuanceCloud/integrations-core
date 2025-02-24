@@ -16,7 +16,14 @@
       "Supported OS::macOS",
       "Supported OS::Windows",
       "Category::Configuration & Deployment",
-      "Category::Containers"
+      "Category::Containers",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-helm-kubernetes-with-datadog/"
+      }
     ]
   },
   "author": {
@@ -25,7 +32,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Helm",
@@ -40,13 +46,15 @@
       },
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10257,
+      "auto_install": true
     },
     "dashboards": {
       "Helm - Overview": "assets/dashboards/overview.json"
     },
     "monitors": {
-      "[helm] Monitor Helm failed releases": "assets/monitors/monitor_failed_releases.json"
+      "Release is failed": "assets/monitors/monitor_failed_releases.json"
     }
   }
 }

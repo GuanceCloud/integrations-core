@@ -3,9 +3,7 @@
 # Licensed under Simplified BSD License (see LICENSE)
 import copy
 import os
-from collections import deque
 
-import mock
 import psycopg2
 import pytest
 from semver import VersionInfo
@@ -15,7 +13,18 @@ from datadog_checks.postgres import PostgreSql
 from datadog_checks.postgres.config import PostgresConfig
 from datadog_checks.postgres.metrics_cache import PostgresMetricsCache
 
-from .common import DB_NAME, HOST, PASSWORD, PORT, PORT_REPLICA, PORT_REPLICA2, POSTGRES_IMAGE, POSTGRES_VERSION, USER
+from .common import (
+    DB_NAME,
+    HOST,
+    PASSWORD,
+    PORT,
+    PORT_REPLICA,
+    PORT_REPLICA2,
+    PORT_REPLICA_LOGICAL,
+    POSTGRES_IMAGE,
+    POSTGRES_VERSION,
+    USER,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 INSTANCE = {
@@ -34,6 +43,7 @@ def connect_to_pg():
     if float(POSTGRES_VERSION) >= 10.0:
         psycopg2.connect(host=HOST, dbname=DB_NAME, user=USER, port=PORT_REPLICA, password=PASSWORD)
         psycopg2.connect(host=HOST, dbname=DB_NAME, user=USER, port=PORT_REPLICA2, password=PASSWORD)
+        psycopg2.connect(host=HOST, dbname=DB_NAME, user=USER, port=PORT_REPLICA_LOGICAL, password=PASSWORD)
 
 
 @pytest.fixture(scope='session')
@@ -61,8 +71,8 @@ def check():
 
 @pytest.fixture
 def integration_check():
-    def _check(instance):
-        c = PostgreSql('postgres', {}, [instance])
+    def _check(instance, init_config=None):
+        c = PostgreSql('postgres', init_config or {}, [instance])
         return c
 
     return _check
@@ -88,14 +98,21 @@ def pg_replica_instance2():
 
 
 @pytest.fixture
+def pg_replica_logical():
+    instance = copy.deepcopy(INSTANCE)
+    instance['port'] = PORT_REPLICA_LOGICAL
+    return instance
+
+
+@pytest.fixture
 def metrics_cache(pg_instance):
-    config = PostgresConfig(pg_instance)
+    config = PostgresConfig(instance=pg_instance, init_config={}, check={'warning': print})
     return PostgresMetricsCache(config)
 
 
 @pytest.fixture
 def metrics_cache_replica(pg_replica_instance):
-    config = PostgresConfig(pg_replica_instance)
+    config = PostgresConfig(instance=pg_replica_instance, init_config={}, check={'warning': print})
     return PostgresMetricsCache(config)
 
 
@@ -105,31 +122,3 @@ def e2e_instance():
     instance['dbm'] = True
     instance['collect_resources'] = {'collection_interval': 0.1}
     return instance
-
-
-@pytest.fixture()
-def mock_cursor_for_replica_stats():
-    with mock.patch('psycopg2.connect') as connect:
-        cursor = mock.MagicMock()
-        data = deque()
-        connect.return_value = mock.MagicMock(cursor=mock.MagicMock(return_value=cursor))
-
-        def cursor_execute(query, second_arg=""):
-            if "FROM pg_stat_replication" in query:
-                data.appendleft(['app1', 'streaming', 'async', '1.1.1.1', 12, 12, 12, 12])
-                data.appendleft(['app2', 'backup', 'sync', '1.1.1.1', 13, 13, 13, 13])
-            elif query == 'SHOW SERVER_VERSION;':
-                data.appendleft([POSTGRES_VERSION])
-
-        def cursor_fetchall():
-            while data:
-                yield data.pop()
-
-        def cursor_fetchone():
-            return data.pop()
-
-        cursor.__enter__().execute = cursor_execute
-        cursor.__enter__().fetchall = cursor_fetchall
-        cursor.__enter__().fetchone = cursor_fetchone
-
-        yield

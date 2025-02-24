@@ -14,7 +14,14 @@
     "classifier_tags": [
       "Category::Log Collection",
       "Supported OS::Linux",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-postfix-queues"
+      }
     ]
   },
   "author": {
@@ -23,7 +30,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Postfix",
@@ -44,16 +50,15 @@
       "process_signatures": [
         "postfix start",
         "sendmail -bd"
-      ]
+      ],
+      "source_type_id": 66,
+      "auto_install": true
     },
     "dashboards": {
       "postfix": "assets/dashboards/postfix_dashboard.json"
     },
     "saved_views": {
       "postfix_processes": "assets/saved_views/postfix_processes.json"
-    },
-    "logs": {
-      "source": "postfix"
     }
   }
 }

@@ -14,8 +14,7 @@ except ImportError:
     # Don't fail on < 6.2
     import logging
 
-    log = logging.getLogger(__name__)
-    log.info('Agent does not provide filtering logic, disabling container filtering')
+    logging.getLogger(__name__).info('Agent does not provide filtering logic, disabling container filtering')
 
     def c_is_excluded(name, image, namespace=""):
         return False
@@ -107,12 +106,15 @@ def get_container_label(labels, l_name):
 
 
 def get_prometheus_url(default_url):
+    """
+    Use to retrieve the prometheus URL configuration from the get_connection_info()
+    :param default_url: the default prometheus URL
+    :rtype: (string, error)
+    :return: a tuple (the prometheus url, possible get_connection_info() call error )
+    """
     kubelet_conn_info = get_connection_info()
     kubelet_conn_info = {} if kubelet_conn_info is None else kubelet_conn_info
-    error = kubelet_conn_info.get("err")
-    if error:
-        log.warning(error)
-    return kubelet_conn_info.get("url", default_url)
+    return kubelet_conn_info.get("url", default_url), kubelet_conn_info.get("err")
 
 
 class PodListUtils(object):
@@ -152,13 +154,14 @@ class PodListUtils(object):
             if is_static_pending_pod(pod):
                 self.static_pod_uids.add(uid)
 
-            for ctr in pod.get('status', {}).get('containerStatuses', []):
-                cid = ctr.get('containerID')
-                if not cid:
-                    continue
-                self.containers[cid] = ctr
-                self.container_id_by_name_tuple[(namespace, pod_name, ctr.get('name'))] = cid
-                self.container_id_to_namespace[cid] = namespace
+            for field in ['containerStatuses', 'initContainerStatuses']:
+                for ctr in pod.get('status', {}).get(field, []):
+                    cid = ctr.get('containerID')
+                    if not cid:
+                        continue
+                    self.containers[cid] = ctr
+                    self.container_id_by_name_tuple[(namespace, pod_name, ctr.get('name'))] = cid
+                    self.container_id_to_namespace[cid] = namespace
 
     def get_uid_by_name_tuple(self, name_tuple):
         """

@@ -28,8 +28,11 @@ def test_e2e_profile_sophos_xgs_firewall(dd_agent_check):
     common_tags = [
         'snmp_profile:sophos-xgs-firewall',
         'snmp_host:sophos-xgs-firewall.device.name',
+        'device_hostname:sophos-xgs-firewall.device.name',
         'device_namespace:default',
         'snmp_device:' + ip_address,
+        'device_ip:' + ip_address,
+        'device_id:default:' + ip_address,
     ] + [
         'sfos_device_fw_version:forward zombies zombies oxen their',
         'sfos_device_type:Jaded forward kept acted but quaintly but',
@@ -90,6 +93,8 @@ def test_e2e_profile_sophos_xgs_firewall(dd_agent_check):
         'status': 1,
         'sys_object_id': '1.3.6.1.4.1.2604.5',
         'vendor': 'sophos',
+        'device_type': 'firewall',
+        'integration': 'snmp',
     }
     device['tags'] = common_tags
     assert_device_metadata(aggregator, device)

@@ -13,9 +13,19 @@
     "media": [],
     "classifier_tags": [
       "Category::Log Collection",
+      "Category::Kubernetes",
       "Supported OS::Linux",
       "Supported OS::Windows",
-      "Supported OS::macOS"
+      "Supported OS::macOS",
+      "Submitted Data Type::Logs",
+      "Submitted Data Type::Metrics",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/container-native-integrations/#messaging-and-streaming-with-strimzi"
+      }
     ]
   },
   "assets": {
@@ -43,17 +53,16 @@
       ],
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
-      }
+      },
+      "source_type_id": 10352,
+      "auto_install": true
     },
     "monitors": {
-      "cluster_operate_resource_state": "assets/monitors/cluster_operator_resource.json",
-      "topic_operate_resource_state": "assets/monitors/topic_operator_resource.json"
+      "Strimzi Cluster Operator Resource on host is in a \"fail\" state\"": "assets/monitors/cluster_operator_resource.json",
+      "Strimzi Topic Operator Resource on host is in a \"fail\" state\"": "assets/monitors/topic_operator_resource.json"
     },
     "dashboards": {
       "strimzi": "assets/dashboards/overview.json"
-    },
-    "logs": {
-      "source": "strimzi"
     }
   },
   "author": {
@@ -61,6 +70,5 @@
     "name": "Datadog",
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
-  },
-  "oauth": {}
+  }
 }

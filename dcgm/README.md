@@ -8,7 +8,7 @@ This check submits metrics exposed by the [NVIDIA DCGM Exporter][16] in Datadog 
 
 ### Installation
 
-Starting from Agent release 7.47.0, the DCGM check is included in the [Datadog Agent][1] package. However, you need to spin up the DCGM Exporter container to expose the GPU metrics in order for the Agent to collect this data. As the default counters are not sufficient, Datadog recommends using the following DCGM configuration to cover the same ground as the NVML integration in addition to having useful metrics.
+Starting from Agent release 7.47.0, the DCGM check is included in the [Datadog Agent][1] package. However, you need to spin up the DCGM Exporter container to expose the GPU metrics in order for the Agent to collect this data. As the default counters are not sufficient, Datadog recommends using the following DCGM configuration to cover the same ground as the NVML integration in addition to having useful metrics. This integration is fully supported by Agent 7.59+. Some telemetry may not be available for older agent versions.
 
 ```
 # Format
@@ -97,7 +97,7 @@ To configure the exporter in a Docker environment:
 1. Create the file `$PWD/default-counters.csv` which contains the default fields from NVIDIA `etc/default-counters.csv` as well as additional Datadog-recommended fields. To add more fields for collection, follow [these instructions][9]. For the complete list of fields, see the [DCGM API reference manual][10].
 2. Run the Docker container using the following command:
    ```shell
-   sudo docker run --pid=host --privileged -e DCGM_EXPORTER_INTERVAL=3 --gpus all -d -v /proc:/proc -v $PWD/default-counters.csv:/etc/dcgm-exporter/default-counters.csv -p 9400:9400 --name dcgm-exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
+   sudo docker run --pid=host --privileged -e DCGM_EXPORTER_INTERVAL=5000 --gpus all -d -v /proc:/proc -v $PWD/default-counters.csv:/etc/dcgm-exporter/default-counters.csv -p 9400:9400 --name dcgm-exporter nvcr.io/nvidia/k8s/dcgm-exporter:3.1.7-3.1.4-ubuntu20.04
    ```
 
 <!-- xxz tab xxx -->
@@ -325,7 +325,7 @@ However, Datadog recommends that you check to make sure these values suit your p
 
 ### Metrics
 
-See [metadata.csv][6] for a list of metrics that this integration provides.
+See [metadata.csv][7] for a list of metrics provided by this integration.
 
 ### Events
 

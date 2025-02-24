@@ -16,7 +16,14 @@
       "Supported OS::macOS",
       "Category::Data Stores",
       "Category::OS & System",
-      "Category::Log Collection"
+      "Category::Log Collection",
+      "Offering::Integration"
+    ],
+    "resources": [
+      {
+        "resource_type": "blog",
+        "url": "https://www.datadoghq.com/blog/monitor-ceph-datadog"
+      }
     ]
   },
   "author": {
@@ -25,7 +32,6 @@
     "homepage": "https://www.datadoghq.com",
     "sales_email": "info@datadoghq.com"
   },
-  "oauth": {},
   "assets": {
     "integration": {
       "source_type_name": "Ceph",
@@ -43,16 +49,19 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       },
-      "process_signatures": ["ceph-mon", "ceph-mgr", "ceph-osd"]
+      "process_signatures": [
+        "ceph-mon",
+        "ceph-mgr",
+        "ceph-osd"
+      ],
+      "source_type_id": 138,
+      "auto_install": true
     },
     "dashboards": {
       "ceph": "assets/dashboards/overview.json"
     },
     "saved_views": {
       "ceph_processes": "assets/saved_views/ceph_processes.json"
-    },
-    "logs": {
-      "source": "ceph"
     }
   }
 }

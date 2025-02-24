@@ -1,21 +1,15 @@
 # (C) Datadog, Inc. 2018-present
 # All rights reserved
 # Licensed under Simplified BSD License (see LICENSE)
-import contextlib
 import copy
 
 import mock
 import psycopg2
 import pytest
-from mock import MagicMock
 from pytest import fail
 from semver import VersionInfo
-from six import iteritems
 
 from datadog_checks.postgres import PostgreSql, util
-
-from .common import PORT, check_performance_metrics
-from .utils import requires_over_10
 
 pytestmark = pytest.mark.unit
 
@@ -90,123 +84,6 @@ def test_get_instance_with_default(pg_instance, collect_default_database):
         assert dbfilter in res['query']
 
 
-def test_malformed_get_custom_queries(check):
-    """
-    Test early-exit conditions for _get_custom_queries()
-    """
-    check.log = MagicMock()
-    db = MagicMock()
-
-    @contextlib.contextmanager
-    def mock_db():
-        yield db
-
-    check.db = mock_db
-
-    check._config.custom_queries = [{}]
-
-    # Make sure 'metric_prefix' is defined
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with("custom query field `metric_prefix` is required")
-    check.log.reset_mock()
-
-    # Make sure 'query' is defined
-    malformed_custom_query = {'metric_prefix': 'postgresql'}
-    check._config.custom_queries = [malformed_custom_query]
-
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "custom query field `query` is required for metric_prefix `%s`", malformed_custom_query['metric_prefix']
-    )
-    check.log.reset_mock()
-
-    # Make sure 'columns' is defined
-    malformed_custom_query['query'] = 'SELECT num FROM sometable'
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "custom query field `columns` is required for metric_prefix `%s`", malformed_custom_query['metric_prefix']
-    )
-    check.log.reset_mock()
-
-    # Make sure we gracefully handle an error while performing custom queries
-    malformed_custom_query_column = {}
-    malformed_custom_query['columns'] = [malformed_custom_query_column]
-    db.cursor().__enter__().execute.side_effect = psycopg2.ProgrammingError('FOO')
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "Error executing query for metric_prefix %s: %s", malformed_custom_query['metric_prefix'], 'FOO'
-    )
-    check.log.reset_mock()
-
-    # Make sure the number of columns defined is the same as the number of columns return by the query
-    malformed_custom_query_column = {}
-    malformed_custom_query['columns'] = [malformed_custom_query_column]
-    query_return = ['num', 1337]
-    db.cursor().__enter__().execute.side_effect = None
-    db.cursor().__enter__().__iter__.return_value = iter([query_return])
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "query result for metric_prefix %s: expected %s columns, got %s",
-        malformed_custom_query['metric_prefix'],
-        len(malformed_custom_query['columns']),
-        len(query_return),
-    )
-    check.log.reset_mock()
-
-    # Make sure the query does not return an empty result
-    db.cursor().__enter__().__iter__.return_value = iter([[]])
-    check._collect_custom_queries([])
-    check.log.debug.assert_called_with(
-        "query result for metric_prefix %s: returned an empty result", malformed_custom_query['metric_prefix']
-    )
-    check.log.reset_mock()
-
-    # Make sure 'name' is defined in each column
-    malformed_custom_query_column['some_key'] = 'some value'
-    db.cursor().__enter__().__iter__.return_value = iter([[1337]])
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "column field `name` is required for metric_prefix `%s`", malformed_custom_query['metric_prefix']
-    )
-    check.log.reset_mock()
-
-    # Make sure 'type' is defined in each column
-    malformed_custom_query_column['name'] = 'num'
-    db.cursor().__enter__().__iter__.return_value = iter([[1337]])
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "column field `type` is required for column `%s` of metric_prefix `%s`",
-        malformed_custom_query_column['name'],
-        malformed_custom_query['metric_prefix'],
-    )
-    check.log.reset_mock()
-
-    # Make sure 'type' is a valid metric type
-    malformed_custom_query_column['type'] = 'invalid_type'
-    db.cursor().__enter__().__iter__.return_value = iter([[1337]])
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "invalid submission method `%s` for column `%s` of metric_prefix `%s`",
-        malformed_custom_query_column['type'],
-        malformed_custom_query_column['name'],
-        malformed_custom_query['metric_prefix'],
-    )
-    check.log.reset_mock()
-
-    # Make sure we're only collecting numeric value metrics
-    malformed_custom_query_column['type'] = 'gauge'
-    query_return = MagicMock()
-    query_return.__float__.side_effect = ValueError('Mocked exception')
-    db.cursor().__enter__().__iter__.return_value = iter([[query_return]])
-    check._collect_custom_queries([])
-    check.log.error.assert_called_once_with(
-        "non-numeric value `%s` for metric column `%s` of metric_prefix `%s`",
-        query_return,
-        malformed_custom_query_column['name'],
-        malformed_custom_query['metric_prefix'],
-    )
-
-
 @pytest.mark.parametrize(
     'test_case, params',
     [
@@ -222,7 +99,7 @@ def test_version_metadata(check, test_case, params):
     check.check_id = 'test:123'
     with mock.patch('datadog_checks.base.stubs.datadog_agent.set_check_metadata') as m:
         check.set_metadata('version', test_case)
-        for name, value in iteritems(params):
+        for name, value in params.items():
             m.assert_any_call('test:123', name, value)
         m.assert_any_call('test:123', 'version.scheme', 'semver')
         m.assert_any_call('test:123', 'version.raw', test_case)
@@ -239,71 +116,6 @@ def test_resolved_hostname_metadata(check, test_case):
     with mock.patch('datadog_checks.base.stubs.datadog_agent.set_check_metadata') as m:
         check.set_metadata('resolved_hostname', test_case)
         m.assert_any_call('test:123', 'resolved_hostname', test_case)
-
-
-@requires_over_10
-@pytest.mark.usefixtures('mock_cursor_for_replica_stats')
-def test_replication_stats(aggregator, integration_check, pg_instance):
-    check = integration_check(pg_instance)
-    check.check(pg_instance)
-    base_tags = [
-        'foo:bar',
-        'port:5432',
-        'dd.internal.resource:database_instance:{}'.format(check.resolved_hostname),
-    ]
-    app1_tags = base_tags + [
-        'wal_sync_state:async',
-        'wal_state:streaming',
-        'wal_app_name:app1',
-        'wal_client_addr:1.1.1.1',
-    ]
-    app2_tags = base_tags + [
-        'wal_sync_state:sync',
-        'wal_state:backup',
-        'wal_app_name:app2',
-        'wal_client_addr:1.1.1.1',
-    ]
-
-    aggregator.assert_metric('postgresql.db.count', 0, base_tags)
-    for suffix in ('wal_write_lag', 'wal_flush_lag', 'wal_replay_lag', 'backend_xmin_age'):
-        metric_name = 'postgresql.replication.{}'.format(suffix)
-        aggregator.assert_metric(metric_name, 12, app1_tags)
-        aggregator.assert_metric(metric_name, 13, app2_tags)
-
-    check_performance_metrics(aggregator, check.debug_stats_kwargs()['tags'])
-
-    aggregator.assert_all_metrics_covered()
-
-
-def test_replication_tag(aggregator, integration_check, pg_instance):
-    REPLICATION_TAG_TEST_METRIC = 'postgresql.db.count'
-
-    check = integration_check(pg_instance)
-    expected_tags = pg_instance['tags'] + [
-        'port:{}'.format(PORT),
-        'dd.internal.resource:database_instance:{}'.format(check.resolved_hostname),
-    ]
-
-    # default configuration (no replication)
-    check.check(pg_instance)
-    aggregator.assert_metric(REPLICATION_TAG_TEST_METRIC, tags=expected_tags)
-    aggregator.reset()
-
-    # role = master
-    pg_instance['tag_replication_role'] = True
-    check = integration_check(pg_instance)
-
-    check.check(pg_instance)
-    ROLE_TAG = "replication_role:master"
-    aggregator.assert_metric(REPLICATION_TAG_TEST_METRIC, tags=expected_tags + [ROLE_TAG])
-    aggregator.reset()
-
-    # switchover: master -> standby
-    STANDBY = "standby"
-    check._get_replication_role = MagicMock(return_value=STANDBY)
-    check.check(pg_instance)
-    ROLE_TAG = "replication_role:{}".format(STANDBY)
-    aggregator.assert_metric(REPLICATION_TAG_TEST_METRIC, tags=expected_tags + [ROLE_TAG])
 
 
 def test_query_timeout_connection_string(aggregator, integration_check, pg_instance):
@@ -330,6 +142,7 @@ def test_query_timeout_connection_string(aggregator, integration_check, pg_insta
                 'port:5432',
                 'foo:bar',
                 'dd.internal.resource:database_instance:stubbed.hostname',
+                'database_hostname:stubbed.hostname',
             },
         ),
         (
@@ -340,6 +153,7 @@ def test_query_timeout_connection_string(aggregator, integration_check, pg_insta
                 'port:5432',
                 'server:localhost',
                 'dd.internal.resource:database_instance:stubbed.hostname',
+                'database_hostname:stubbed.hostname',
             },
         ),
     ],
@@ -348,12 +162,11 @@ def test_server_tag_(disable_generic_tags, expected_tags, pg_instance):
     instance = copy.deepcopy(pg_instance)
     instance['disable_generic_tags'] = disable_generic_tags
     check = PostgreSql('test_instance', {}, [instance])
-    tags = check._get_service_check_tags()
-    assert set(tags) == expected_tags
+    assert set(check.tags) == expected_tags
 
 
 @pytest.mark.parametrize(
-    'disable_generic_tags, expected_hostname', [(True, 'resolved.hostname'), (False, 'stubbed.hostname')]
+    'disable_generic_tags, expected_hostname', [(True, 'resolved.hostname'), (False, 'resolved.hostname')]
 )
 def test_resolved_hostname(disable_generic_tags, expected_hostname, pg_instance):
     instance = copy.deepcopy(pg_instance)
@@ -364,6 +177,4 @@ def test_resolved_hostname(disable_generic_tags, expected_hostname, pg_instance)
     ) as resolve_db_host_mock:
         check = PostgreSql('test_instance', {}, [instance])
         assert check.resolved_hostname == expected_hostname
-        assert resolve_db_host_mock.called == disable_generic_tags, 'Expected resolve_db_host.called to be ' + str(
-            disable_generic_tags
-        )
+        assert resolve_db_host_mock.called is True

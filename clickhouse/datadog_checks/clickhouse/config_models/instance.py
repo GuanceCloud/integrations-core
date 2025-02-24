@@ -25,7 +25,9 @@ class CustomQuery(BaseModel):
         arbitrary_types_allowed=True,
         frozen=True,
     )
+    collection_interval: Optional[int] = None
     columns: Optional[tuple[MappingProxyType[str, Any], ...]] = None
+    metric_prefix: Optional[str] = None
     query: Optional[str] = None
     tags: Optional[tuple[str, ...]] = None
 
@@ -60,9 +62,11 @@ class InstanceConfig(BaseModel):
     server: str
     service: Optional[str] = None
     tags: Optional[tuple[str, ...]] = None
+    tls_ca_cert: Optional[str] = None
     tls_verify: Optional[bool] = None
     use_global_custom_queries: Optional[str] = None
     username: Optional[str] = None
+    verify: Optional[bool] = None
 
     @model_validator(mode='before')
     def _initial_validation(cls, values):

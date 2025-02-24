@@ -64,6 +64,9 @@ AGENT_V2_METRICS = [
     "cilium.forward_bytes.count",
     "cilium.forward_count.count",
     "cilium.fqdn.gc_deletions.count",
+    "cilium.fqdn.active_names",
+    "cilium.fqdn.active_ips",
+    "cilium.fqdn.alive_zombie_connections",
     "cilium.identity.count",
     "cilium.ip_addresses.count",
     "cilium.ipam.events.count",
@@ -79,6 +82,12 @@ AGENT_V2_METRICS = [
     "cilium.policy.count",
     "cilium.policy.endpoint_enforcement_status",
     "cilium.policy.import_errors.count",
+    "cilium.proxy.redirects",
+    "cilium.proxy.upstream_reply.seconds.bucket",
+    "cilium.proxy.upstream_reply.seconds.count",
+    "cilium.proxy.upstream_reply.seconds.sum",
+    "cilium.proxy.datapath.update_timeout.count",
+    "cilium.policy.l7.count",
     "cilium.policy.l7_denied.count",
     "cilium.policy.l7_forwarded.count",
     "cilium.policy.l7_parse_errors.count",
@@ -119,6 +128,19 @@ AGENT_V2_METRICS = [
     "cilium.kvstore.initial_sync_completed",
 ]
 
+AGENT_V2_METRICS_1_14 = [
+    # E2E not updated yet to 1.14+ of Cilium
+    'cilium.cidrgroup.policies',
+    'cilium.k8s_client.rate_limiter_duration.seconds.bucket',
+    'cilium.k8s_client.rate_limiter_duration.seconds.count',
+    'cilium.k8s_client.rate_limiter_duration.seconds.sum',
+    'cilium.policy.change.count',
+    'cilium.services.events.count',
+    # 1.16+
+    'cilium.fqdn.selectors',
+    'cilium.identity.label_sources',
+]
+
 AGENT_V1_METRICS = [
     "cilium.agent.api_process_time.seconds.count",
     "cilium.agent.api_process_time.seconds.sum",
@@ -157,6 +179,9 @@ AGENT_V1_METRICS = [
     "cilium.forward_bytes.total",
     "cilium.forward_count.total",
     "cilium.fqdn.gc_deletions.total",
+    "cilium.fqdn.active_names",
+    "cilium.fqdn.active_ips",
+    "cilium.fqdn.alive_zombie_connections",
     "cilium.identity.count",
     "cilium.ip_addresses.count",
     "cilium.ipcache.errors.total",
@@ -172,6 +197,11 @@ AGENT_V1_METRICS = [
     "cilium.policy.count",
     "cilium.policy.endpoint_enforcement_status",
     "cilium.policy.import_errors.count",
+    "cilium.proxy.redirects",
+    "cilium.proxy.upstream_reply.seconds.count",
+    "cilium.proxy.upstream_reply.seconds.sum",
+    "cilium.proxy.datapath.update_timeout.total",
+    "cilium.policy.l7.total",
     "cilium.policy.l7_denied.total",
     "cilium.policy.l7_forwarded.total",
     "cilium.policy.l7_parse_errors.total",
@@ -201,6 +231,19 @@ AGENT_V1_METRICS = [
     "cilium.kvstore.quorum_errors.total",
     "cilium.kvstore.sync_queue_size",
     "cilium.kvstore.initial_sync_completed",
+    "cilium.version",
+]
+
+AGENT_V1_METRICS_1_14 = [
+    # E2E not updated yet to 1.14+ of Cilium
+    'cilium.cidrgroup.policies',
+    'cilium.k8s_client.rate_limiter_duration.seconds.count',
+    'cilium.k8s_client.rate_limiter_duration.seconds.sum',
+    'cilium.policy.change.total',
+    'cilium.services.events.total',
+    # 1.16+
+    'cilium.fqdn.selectors',
+    'cilium.identity.label_sources',
 ]
 
 # Some types changed moving from v1 to v2. We keep v2 in the metadata.csv file.
@@ -224,6 +267,10 @@ AGENT_V1_METRICS_EXCLUDE_METADATA_CHECK = [
     "cilium.triggers_policy.update_call_duration.seconds.sum",
     "cilium.policy.implementation_delay.count",
     "cilium.policy.implementation_delay.sum",
+    "cilium.proxy.upstream_reply.seconds.count",
+    "cilium.proxy.upstream_reply.seconds.sum",
+    'cilium.k8s_client.rate_limiter_duration.seconds.count',
+    'cilium.k8s_client.rate_limiter_duration.seconds.sum',
 ]
 
 OPERATOR_V2_PROCESS_METRICS = [
@@ -311,7 +358,25 @@ OPERATOR_V2_METRICS = [
     "cilium.operator.ipam.allocation_ops.count",
     "cilium.operator.ipam.interface_creation_ops.count",
     "cilium.operator.ipam.release_ops.count",
+    "cilium.operator.ipam.empty_interface_slots.count",
+    "cilium.operator.ipam.interface_candidates.count",
+    "cilium.operator.ipam.ip_allocation_ops.count",
 ] + OPERATOR_V2_PROCESS_METRICS
+
+OPERATOR_V2_METRICS_1_14 = [
+    # E2E not updated yet to 1.14+ of Cilium
+    "cilium.operator.ipam.allocation.duration.seconds.bucket",
+    "cilium.operator.ipam.allocation.duration.seconds.sum",
+    "cilium.operator.ipam.allocation.duration.seconds.count",
+    "cilium.operator.ipam.available_interfaces",
+    "cilium.operator.ipam.available_ips",
+    "cilium.operator.ipam.ip_release_ops.count",
+    "cilium.operator.ipam.needed_ips",
+    "cilium.operator.ipam.release.duration.seconds.bucket",
+    "cilium.operator.ipam.release.duration.seconds.sum",
+    "cilium.operator.ipam.release.duration.seconds.count",
+    "cilium.operator.ipam.used_ips",
+]
 
 # Not available in test metric fixtures
 ADDL_OPERATOR_AWS_METRICS = [
@@ -344,6 +409,7 @@ ADDL_OPERATOR_METRICS = [
     "cilium.operator.ces.sync_errors.count",
 ]
 
+# Optional metrics for integration tests
 OPTIONAL_METRICS = {
     "cilium.bpf.map_pressure",
     "cilium.datapath.conntrack_dump.resets.count",
@@ -367,4 +433,13 @@ OPTIONAL_METRICS = {
     "cilium.kvstore.quorum_errors.count",
     "cilium.kvstore.sync_queue_size",
     "cilium.kvstore.initial_sync_completed",
+    "cilium.fqdn.active_names",
+    "cilium.fqdn.active_ips",
+    "cilium.fqdn.alive_zombie_connections",
+    "cilium.proxy.redirects",
+    "cilium.proxy.upstream_reply.seconds.bucket",
+    "cilium.proxy.upstream_reply.seconds.count",
+    "cilium.proxy.upstream_reply.seconds.sum",
+    "cilium.proxy.datapath.update_timeout.count",
+    "cilium.policy.l7.count",
 }
