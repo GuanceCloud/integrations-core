@@ -2,6 +2,25 @@
 
 <!-- towncrier release notes start -->
 
+## 6.0.1 / 2025-08-07 / Agent 7.70.0
+
+***Fixed***:
+
+* Improve descriptions and examples in example configuration file ([#20878](https://github.com/DataDog/integrations-core/pull/20878))
+
+## 6.0.0 / 2025-07-10 / Agent 7.69.0
+
+***Changed***:
+
+* Bump datadog_checks_base to 37.16.0 ([#20711](https://github.com/DataDog/integrations-core/pull/20711))
+
+## 5.1.1 / 2025-04-17 / Agent 7.66.0
+
+***Fixed***:
+
+* Fix issue by which older Citrix versions returning broken JSON payloads may fail with older versions of the datadog_base_check package ([#19936](https://github.com/DataDog/integrations-core/pull/19936))
+* Bump the version of datadog-checks-base to 37.9.0 ([#19936](https://github.com/DataDog/integrations-core/pull/19936))
+
 ## 5.1.0 / 2025-01-16 / Agent 7.63.0
 
 ***Added***:

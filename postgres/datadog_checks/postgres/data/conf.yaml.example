@@ -32,9 +32,8 @@ init_config:
 instances:
 
     ## @param host - string - required
-    ## The hostname to connect to.
-    ## NOTE: Even if the server name is `localhost`, the Agent connects to PostgreSQL using TCP/IP unless you also
-    ## provide a value for the sock key.
+    ## The hostname to connect to. To connect to a Unix socket, specify the full path to the socket file,
+    ## e.g. `/var/run/postgresql/.s.PGSQL.5432`.
     #
   - host: localhost
 
@@ -65,6 +64,30 @@ instances:
     #
     # reported_hostname: <REPORTED_HOSTNAME>
 
+    ## @param exclude_hostname - boolean - optional - default: false
+    ## Omit the hostname from tags and events. This is useful when the database host is not monitored by an agent.
+    #
+    # exclude_hostname: false
+
+    ## Controls how the database is identified. The default value is the resolved hostname for the instance, 
+    ## which respects the `reported_hostname` option.
+    ##
+    ## This value will be used as-is for the display name of the instance but will be normalized
+    ## when applied as the `database_instance` tag. Please see https://docs.datadoghq.com/getting_started/tagging/
+    ## for more details on Datadog tag normalization.
+    #
+    # database_identifier:
+
+        ## @param template - string - optional - default: $resolved_hostname
+        ## The template to use for the database identifier. The default value is `$resolved_hostname`.
+        ## You can use the following variables, prefixed by `$` in the template:
+        ## - resolved_hostname: The resolved hostname of the instance, which respects the `reported_hostname` option.
+        ## - host: The provided host of the instance.
+        ## - port: The port number of the instance.
+        ## In addition, you can use any key from the `tags` section of the configuration.
+        #
+        # template: $env-$resolved_hostname:$port
+
     ## @param dbstrict - boolean - optional - default: false
     ## Whether to restrict the scope of the check to just the database in question.
     ## Set to `true` if you only want to gather metrics from the database provided in the dbname parameter.
@@ -85,6 +108,17 @@ instances:
     #   - cloudsqladmin
     #   - alloydbadmin
     #   - alloydbmetadata
+
+    ## @param ignore_schemas_owned_by - list of strings - optional
+    ## A list of database users which own schemas to ignore.
+    ## No metrics or statement samples will be collected for these schemas.
+    ## Each value can be a plain string or a Postgres pattern.
+    #
+    # ignore_schemas_owned_by:
+    #   - rds_superuser
+    #   - rdsadmin
+    #   - user123
+    #   - dev_%_owner
 
     ## @param ssl - string - optional - default: allow
     ## This option determines whether or not and with what priority a secure SSL TCP/IP connection
@@ -248,11 +282,6 @@ instances:
     #
     # data_directory: /usr/local/pgsql/data
 
-    ## @param tag_replication_role - boolean - optional - default: false
-    ## Tag metrics and checks with `replication_role:<master|standby>`.
-    #
-    # tag_replication_role: false
-
     ## @param table_count_limit - integer - optional - default: 200
     ## The maximum number of tables to collect metrics from.
     #
@@ -277,51 +306,48 @@ instances:
     ## Each query must have 2 fields, and can have a third optional field:
     ##
     ## 1. query - The SQL to execute. It can be a simple statement or a multi-line script.
-    ##            Use the pipe `|` if you require a multi-line script.
+    ##     Use the pipe `|` if you require a multi-line script.
     ## 2. columns - The list representing each column, ordered sequentially from left to right.
-    ##              The number of columns must equal the number of columns returned in the query.
-    ##              There are 2 required pieces of data:
-    ##                a. name - The suffix to append to `<INTEGRATION>.` to form
-    ##                          the full metric name. If `type` is a `tag` type, this column is
-    ##                          considered a tag and applied to every
-    ##                          metric collected by this particular query.
-    ##                b. type - The submission method (gauge, monotonic_count, etc.).
-    ##                          This can also be set to the following `tag` types to
-    ##                          tag each metric in the row with the name and value
-    ##                          of the item in this column:
-    ##                           i. tag           - This is the default tag type
-    ##                           ii. tag_list     - This allows multiple values to be attached
-    ##                                             to the tag name. For example: 
-    ##
-    ##                                             query = {
-    ##                                               "name": "example",
-    ##                                               "query": "...",
-    ##                                               "columns": [
-    ##                                                 {"name": "server_tag", "type": "tag_list"},
-    ##                                                 {"name": "foo", "type": "gauge"},
-    ##                                               ]
-    ##                                             }
-    ##
-    ##                                             May result in:
-    ##                                             gauge("foo", tags=[
-    ##                                                                 "server_tag:us",
-    ##                                                                 "server_tag:primary",
-    ##                                                                 "server_tag:default"
-    ##                                                               ])
-    ##                                             gauge("foo", tags=["server_tag:eu"])
-    ##                                             gauge("foo", tags=["server_tag:eu", "server_tag:primary"])
-    ##                           iii. tag_not_null - This only sets tags in the metric if the value is not null
-    ##                          You can use the `count` type to perform aggregation
-    ##                          for queries that return multiple rows with the same or no tags.
-    ##              Columns without a name are ignored. To skip a column, enter:
-    ##                - {}
+    ##     The number of columns must equal the number of columns returned in the query.
+    ##     There are 2 required pieces of data:
+    ##       1. name - The suffix to append to `<INTEGRATION>.` to form
+    ##           the full metric name. If `type` is a `tag` type, this column is considered a tag and applied
+    ##           to every metric collected by this particular query.
+    ##       2. type - The submission method (gauge, monotonic_count, etc.).
+    ##           This can also be set to the following `tag` types to tag each metric in the row with the name
+    ##           and value of the item in this column:
+    ##             1. tag - This is the default tag type
+    ##             2. tag_list - This allows multiple values to be attached to the tag name. For example: 
+    ##                 ```
+    ##                 query = {
+    ##                   "name": "example",
+    ##                   "query": "...",
+    ##                   "columns": [
+    ##                     {"name": "server_tag", "type": "tag_list"},
+    ##                     {"name": "foo", "type": "gauge"},
+    ##                   ]
+    ##                 }
+    ##                 ```
+    ##                 May result in:
+    ##                 ```
+    ##                 gauge("foo", tags=["server_tag:us", "server_tag:primary", "server_tag:default"])
+    ##                 gauge("foo", tags=["server_tag:eu"])
+    ##                 gauge("foo", tags=["server_tag:eu", "server_tag:primary"])
+    ##                 ```
+    ##             3. tag_not_null - This only sets tags in the metric if the value is not null
+    ##           You can use the `count` type to perform aggregation for queries that return multiple rows with
+    ##           the same or no tags.
+    ##     Columns without a name are ignored. To skip a column, enter:
+    ##     ```
+    ##       - {}
+    ##     ```
     ## 3. tags (optional) - A list of tags to apply to each metric.
     ## 4. collection_interval (optional) - The frequency at which to collect the metrics.
     ##     If collection_interval is not set, the query will be run every check run.
-    ##     If the collection interval is less than check collection interval, 
-    ##     the query will be run every check run.
-    ##     If the collection interval is greater than check collection interval, 
-    ##     the query will NOT BE RUN exactly at the collection interval.
+    ##     If the collection interval is less than check collection interval, the query will be run every check
+    ##     run.
+    ##     If the collection interval is greater than check collection interval, the query will NOT BE RUN
+    ##     exactly at the collection interval.
     ##     The query will be run at the next check run after the collection interval has passed.
     ## 5. metric_prefix (optional) - The prefix to apply to each metric.
     #
@@ -407,6 +433,18 @@ instances:
     #
     # pg_stat_statements_view: show_pg_stat_statements()
 
+    ## @param query_encodings - list of strings - optional
+    ## Set this value if your database is encoded in SQL_ASCII and you have clients that use encodings other than UTF-8.
+    ## When attempting to decode stored query text for query metrics, samples and activity, the agent will use these
+    ## values in order and return the first successful decoding. Only supported for Postgres 10 and above.
+    ##
+    ## Note that the values should be the Python versions of the encoding names, which can be referenced at:
+    ## https://docs.python.org/3/library/codecs.html#standard-encodings
+    #
+    # query_encodings:
+    #   - utf8
+    #   - latin1
+
     ## Configure collection of query metrics
     #
     # query_metrics:
@@ -482,12 +520,6 @@ instances:
         #
         # enabled: true
 
-        ## @param collection_interval - number - optional - default: 10
-        ## Set the query activity collection interval (in seconds). This number cannot be smaller than
-        ## query_samples configured collection_interval.
-        #
-        # collection_interval: 10
-
         ## @param payload_row_limit - number - optional - default: 3500
         ## Set the query activity maximum number of pg_stat_activity rows you want to report. If the table is larger
         ## than the maximum rows set, then the top N longest running transactions will be reported.
@@ -498,10 +530,10 @@ instances:
     #
     # collect_settings:
 
-        ## @param enabled - boolean - optional - default: false
+        ## @param enabled - boolean - optional - default: true
         ## Enable collection of pg_settings. Requires `dbm: true`.
         #
-        # enabled: false
+        # enabled: true
 
         ## @param collection_interval - number - optional - default: 600
         ## Set the database settings collection interval (in seconds). Each collection involves a single query to
@@ -831,6 +863,23 @@ instances:
         ## Set to `true` to keep JSON path expressions (e.g. `data->'key'`) in your normalized SQL statements.
         #
         # keep_json_path: false
+
+    ## Configure the collection of raw query statements in query activity and execution plans.
+    ## Raw query statements and execution plans may contain sensitive information (e.g., passwords)
+    ## or personally identifiable information in query text.
+    ## Enabling this option will allow the collection and ingestion of raw query statements and 
+    ## execution plans into Datadog, which can then become viewable in query samples or explain plans. 
+    ## This option is disabled by default.
+    ## Note: Collection of raw query statements is currently in preview.
+    ## If you are interested in participating, please reach out to your Datadog Customer Success Manager.
+    ## This option only applies when dbm is enabled.
+    #
+    # collect_raw_query_statement:
+
+        ## @param enabled - boolean - optional - default: false
+        ## Set to `true` to collect the raw query statements.
+        #
+        # enabled: false
 
     ## @param propagate_agent_tags - boolean - optional - default: false
     ## Set to `true` to propagate the tags from `datadog.yaml` and the agent host tags to the check.

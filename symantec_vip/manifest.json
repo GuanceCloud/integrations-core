@@ -2,15 +2,22 @@
   "manifest_version": "2.0.0",
   "app_uuid": "291079db-0a41-435b-a908-747c06c703a2",
   "app_id": "symantec-vip",
-  "display_on_public_website": false,
+  "owner": "saas-integrations",
+  "display_on_public_website": true,
   "tile": {
     "overview": "README.md#Overview",
     "configuration": "README.md#Setup",
     "support": "README.md#Support",
     "changelog": "CHANGELOG.md",
-    "description": "Gain insights into Symantec VIP logs.",
+    "description": "Gain insights into Symantec VIP events logs.",
     "title": "Symantec VIP",
-    "media": [],
+    "media": [
+      {
+        "caption": "Symantec VIP - Events",
+        "image_url": "images/symantec_vip_events.png",
+        "media_type": "image"
+      }
+    ],
     "classifier_tags": [
       "Category::Log Collection",
       "Category::Security",
@@ -29,6 +36,9 @@
       "service_checks": {
         "metadata_path": "assets/service_checks.json"
       }
+    },
+    "dashboards": {
+      "Symantec VIP - Events": "assets/dashboards/symantec_vip_events.json"
     }
   },
   "author": {

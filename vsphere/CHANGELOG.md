@@ -2,6 +2,39 @@
 
 <!-- towncrier release notes start -->
 
+## 9.0.1 / 2025-08-07 / Agent 7.70.0
+
+***Fixed***:
+
+* Improve descriptions and examples in example configuration file ([#20878](https://github.com/DataDog/integrations-core/pull/20878))
+
+## 9.0.0 / 2025-07-10 / Agent 7.69.0
+
+***Changed***:
+
+* Bump datadog_checks_base to 37.16.0 ([#20711](https://github.com/DataDog/integrations-core/pull/20711))
+
+***Fixed***:
+
+* Allow HTTPS requests to use `tls_ciphers` parameter ([#20179](https://github.com/DataDog/integrations-core/pull/20179))
+* Remove relative imports for non parent modules ([#20646](https://github.com/DataDog/integrations-core/pull/20646))
+
+## 8.3.0 / 2025-04-17 / Agent 7.66.0
+
+***Added***:
+
+* Add failover support with Agent High Availability feature ([#19987](https://github.com/DataDog/integrations-core/pull/19987))
+
+***Fixed***:
+
+* Don't submit property metrics with unknown hostname. ([#19944](https://github.com/DataDog/integrations-core/pull/19944))
+
+## 8.2.1 / 2025-03-19 / Agent 7.65.0
+
+***Fixed***:
+
+* Submit non-VM or ESXI events with an empty hostname. ([#19393](https://github.com/DataDog/integrations-core/pull/19393))
+
 ## 8.2.0 / 2025-01-16 / Agent 7.63.0
 
 ***Added***:

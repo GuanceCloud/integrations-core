@@ -10,12 +10,12 @@ import pymysql
 from datadog_checks.mysql.cursor import CommenterDictCursor
 from datadog_checks.mysql.databases_data import DEFAULT_DATABASES_DATA_COLLECTION_INTERVAL, DatabasesData
 
-from .util import connect_with_autocommit
+from .util import connect_with_session_variables
 
 try:
     import datadog_agent
 except ImportError:
-    from ..stubs import datadog_agent
+    from datadog_checks.base.stubs import datadog_agent
 
 from datadog_checks.base import is_affirmative
 from datadog_checks.base.utils.db.utils import (
@@ -52,7 +52,7 @@ class MySQLMetadata(DBMAsyncJob):
         self._databases_data_collection_interval = config.schemas_config.get(
             "collection_interval", DEFAULT_DATABASES_DATA_COLLECTION_INTERVAL
         )
-        self._settings_enabled = is_affirmative(config.settings_config.get('enabled', False))
+        self._settings_enabled = is_affirmative(config.settings_config.get('enabled', True))
 
         self._settings_collection_interval = float(
             config.settings_config.get('collection_interval', DEFAULT_SETTINGS_COLLECTION_INTERVAL)
@@ -94,7 +94,14 @@ class MySQLMetadata(DBMAsyncJob):
         :return:
         """
         if not self._db:
-            self._db = connect_with_autocommit(**self._connection_args)
+            self._db = connect_with_session_variables(**self._connection_args)
+        else:
+            # Metadata checks runs far less frequently than other checks, and there are reports
+            # that unused pymysql connections sometimes end up being closed unexpectedly.
+            # This is a simple attempt to ensure that the connection is still valid before
+            # returning it. ping() will by default automatically reconnect
+            # if the connection is lost.
+            self._db.ping()
         return self._db
 
     def _close_db_conn(self):
@@ -118,7 +125,7 @@ class MySQLMetadata(DBMAsyncJob):
                 "dd.mysql.db.error",
                 1,
                 tags=self._tags + ["error:{}".format(type(e))] + self._check._get_debug_tags(),
-                hostname=self._check.resolved_hostname,
+                hostname=self._check.reported_hostname,
             )
             raise
 
@@ -131,22 +138,18 @@ class MySQLMetadata(DBMAsyncJob):
             except Exception as e:
                 self._log.error(
                     """An error occurred while collecting database settings.
-                                These may be unavailable until the error is resolved. The error - {}""".format(
-                        e
-                    )
+                                These may be unavailable until the error is resolved. The error - {}""".format(e)
                 )
 
         elapsed_time_databases = time.time() - self._last_databases_collection_time
         if self._databases_data_enabled and elapsed_time_databases >= self._databases_data_collection_interval:
             self._last_databases_collection_time = time.time()
             try:
-                self._databases_data._collect_databases_data(self._tags)
+                self._databases_data.collect_databases_data(self._tags)
             except Exception as e:
                 self._log.error(
                     """An error occurred while collecting schema data.
-                                These may be unavailable until the error is resolved. The error - {}""".format(
-                        e
-                    )
+                                These may be unavailable until the error is resolved. The error - {}""".format(e)
                 )
 
     def shut_down(self):
@@ -169,7 +172,8 @@ class MySQLMetadata(DBMAsyncJob):
             rows = cursor.fetchall()
             settings = [dict(row) for row in rows]
         event = {
-            "host": self._check.resolved_hostname,
+            "host": self._check.reported_hostname,
+            "database_instance": self._check.database_identifier,
             "agent_version": datadog_agent.get_version(),
             "dbms": "mysql",
             "kind": "mysql_variables",

@@ -81,7 +81,7 @@ metadata:
           "init_config": {},
           "instances": [
             {
-              "openmetrics_endpoint": "http://%%host%%:8000/metrics"
+              "openmetrics_endpoint": "http://%%host%%:8080/metrics"
             }
           ]
         }
@@ -96,7 +96,7 @@ spec:
 
 _Available for Agent versions >6.0_
 
-Kyverno logs can be collected from the different KEDA pods through Kubernetes. Collecting logs is disabled by default in the Datadog Agent. To enable it, see [Kubernetes Log Collection][10].
+KEDA logs can be collected from the different KEDA pods through Kubernetes. Collecting logs is disabled by default in the Datadog Agent. To enable it, see [Kubernetes Log Collection][10].
 
 See the [Autodiscovery Integration Templates][3] for guidance on applying the parameters below.
 
@@ -130,7 +130,7 @@ Need help? Contact [Datadog support][9].
 
 
 [1]: https://keda.sh/
-[2]: https://app.datadoghq.com/account/settings/agent/latest
+[2]: /account/settings/agent/latest
 [3]: https://docs.datadoghq.com/agent/kubernetes/integrations/
 [4]: https://github.com/DataDog/integrations-core/blob/master/keda/datadog_checks/keda/data/conf.yaml.example
 [5]: https://docs.datadoghq.com/agent/guide/agent-commands/#start-stop-and-restart-the-agent

@@ -12,7 +12,7 @@ Write-Host "Will build librdkafka $kafka_version"
 Get-RemoteFile `
   -Uri "https://github.com/confluentinc/librdkafka/archive/refs/tags/v${kafka_version}.tar.gz" `
   -Path "librdkafka-${kafka_version}.tar.gz" `
-  -Hash '5bd1c46f63265f31c6bfcedcde78703f77d28238eadf23821c2b43fc30be3e25'
+  -Hash 'a2c87186b081e2705bb7d5338d5a01bc88d43273619b372ccb7bb0d264d0ca9f'
 7z x "librdkafka-${kafka_version}.tar.gz" -o"C:\"
 7z x "C:\librdkafka-${kafka_version}.tar" -o"C:\librdkafka"
 Remove-Item "librdkafka-${kafka_version}.tar.gz"
@@ -24,9 +24,7 @@ Remove-Item "librdkafka-${kafka_version}.tar.gz"
 $triplet = "x64-windows"
 $vcpkg_dir = "C:\vcpkg"
 $librdkafka_dir = "C:\librdkafka\librdkafka-${kafka_version}"
-# We set the desired commit to ensure that we are building with a recent version.
-# The desired commit should be updated periodically or when critical fixes or features are released.
-$desired_commit = "5ee5eee0d3e9c6098b24d263e9099edcdcef6631" # Commit that incudes OpenSSL 3.4.1
+$desired_commit = "9a023fa7d4c8c9ed3fa5b1be466e605b10b9d220"
 
 # Clone and configure vcpkg
 if (-Not (Test-Path -Path "$vcpkg_dir\.git")) {

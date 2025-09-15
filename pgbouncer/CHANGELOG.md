@@ -2,6 +2,36 @@
 
 <!-- towncrier release notes start -->
 
+## 8.5.0 / 2025-09-04 / Agent 7.70.1
+
+***Added***:
+
+* Upgrade to psycopg3 ([#21173](https://github.com/DataDog/integrations-core/pull/21173))
+
+## 8.4.0 / 2025-08-07 / Agent 7.70.0
+
+***Added***:
+
+* Revert upgrade to psycopg3 ([#20884](https://github.com/DataDog/integrations-core/pull/20884))
+
+## 8.3.0 / 2025-07-29 / Agent 7.69.0
+
+***Added***:
+
+* Revert upgrade to psycopg3 ([#20884](https://github.com/DataDog/integrations-core/pull/20884))
+
+## 8.2.0 / 2025-07-10
+
+***Added***:
+
+* Upgrade to psycopg3 ([#20550](https://github.com/DataDog/integrations-core/pull/20550))
+
+## 8.1.2 / 2025-03-19 / Agent 7.65.0
+
+***Fixed***:
+
+* Close connections on exceptions, and, when connection caching is disabled, after each check iteration. ([#19839](https://github.com/DataDog/integrations-core/pull/19839))
+
 ## 8.1.1 / 2025-01-29 / Agent 7.63.0
 
 ***Fixed***:

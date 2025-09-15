@@ -13,7 +13,7 @@ You can also create your own metrics using custom `find`, `count` and `aggregate
 
 Enable [Database Monitoring][28] (DBM) for enhanced insights into query performance and database health. In addition to the standard integration, Datadog DBM provides live and historical query snapshots, slow query metrics, database load, operation execution plans, and collections insights.
 
-**Note**: MongoDB v3.0+ is required for this integration. Integration of MongoDB Atlas with Datadog is only available on M10+ clusters. This integration also supports Alibaba ApsaraDB and AWS DocumentDB Instance-Based clusters. DocumentDB Elastic clusters are not supported because they only expose the cluster (mongos) endpoints.
+**Note**: MongoDB v3.0+ is required for this integration. Integration of MongoDB Atlas with Datadog is only available on M10+ clusters. This integration also supports Alibaba ApsaraDB and Amazon DocumentDB Instance-Based clusters. DocumentDB Elastic clusters are not supported because they only expose the cluster (mongos) endpoints.
 
 ## Setup
 
@@ -27,13 +27,13 @@ The MongoDB check is included in the [Datadog Agent][2] package. No additional i
 
 **Note**: To install Database Monitoring for MongoDB, select your hosting solution in the [Database Monitoring documentation][29] for instructions.
 
-Most low-level metrics (uptime, storage size etc.) need to be collected on every mongod node. Other higher-level metrics (collection/index statistics etc.) should be collected only once. For these reasons the way you configure the Agents depends on how your mongo cluster is deployed.
+Most low-level metrics (uptime, storage size etc.) need to be collected on every `mongod` node. Other higher-level metrics (collection/index statistics, etc.) should be collected only once. For these reasons, the way you configure the Agents depends on how your MongoDB cluster is deployed.
 
 <!-- xxx tabs xxx -->
 <!-- xxx tab "Standalone" xxx -->
 #### Standalone
 
-To configure this integration for a single node MongoDB deployment:
+To configure this integration for a single-node MongoDB deployment:
 
 ##### Prepare MongoDB
 In a Mongo shell, create a read-only user for the Datadog Agent in the `admin` database:
@@ -61,7 +61,7 @@ db.createUser({
 ```
 
 ##### Configure the agents
-You only need a single agent, preferably running on the same node, to collect all the available mongo metrics. See below for configuration options.
+You only need a single agent, preferably running on the same node, to collect all the available MongoDB metrics. See below for configuration options.
 <!-- xxz tab xxx -->
 <!-- xxx tab "Replica Set" xxx -->
 #### Replica set
@@ -585,7 +585,7 @@ Additional helpful documentation, links, and articles:
 - [Monitoring MongoDB performance metrics (MMAP)][27]
 
 [1]: https://raw.githubusercontent.com/DataDog/integrations-core/master/mongo/images/mongo_dashboard.png
-[2]: https://app.datadoghq.com/account/settings/agent/latest
+[2]: /account/settings/agent/latest
 [3]: https://docs.mongodb.com/manual/core/replica-set-arbiter/#authentication
 [4]: https://docs.datadoghq.com/agent/guide/agent-configuration-files/#agent-configuration-directory
 [5]: https://github.com/DataDog/integrations-core/blob/master/mongo/datadog_checks/mongo/data/conf.yaml.example
