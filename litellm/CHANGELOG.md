@@ -2,13 +2,23 @@
 
 <!-- towncrier release notes start -->
 
+## 2.2.0 / 2025-11-26
+
+***Added***:
+
+* Bump minimum version of datadog-checks-base to 37.24.0 ([#21945](https://github.com/DataDog/integrations-core/pull/21945))
+
+***Fixed***:
+
+* Add a renamed metric that was missed from the [1.75 release of LiteLLM](https://github.com/BerriAI/litellm/pull/13271) ([#21877](https://github.com/DataDog/integrations-core/pull/21877))
+
 ## 2.1.1 / 2025-10-31
 
 ***Fixed***:
 
 * Add allowed values list on kerberos_auth field ([#20879](https://github.com/DataDog/integrations-core/pull/20879))
 
-## 2.1.0 / 2025-10-02
+## 2.1.0 / 2025-10-02 / Agent 7.72.0
 
 ***Added***:
 

@@ -2,6 +2,16 @@
 
 <!-- towncrier release notes start -->
 
+## 5.2.0 / 2025-11-26
+
+***Added***:
+
+* Bump minimum version of datadog-checks-base to 37.24.0 ([#21945](https://github.com/DataDog/integrations-core/pull/21945))
+
+***Fixed***:
+
+* Grammar fixes in the config files ([#21756](https://github.com/DataDog/integrations-core/pull/21756))
+
 ## 5.1.1 / 2025-10-31
 
 ***Fixed***:
@@ -9,7 +19,7 @@
 * Add allowed values list on kerberos_auth field ([#20879](https://github.com/DataDog/integrations-core/pull/20879))
 * Move `disable_legacy_service_tag` config param up in conf.yaml.example ([#21743](https://github.com/DataDog/integrations-core/pull/21743))
 
-## 5.1.0 / 2025-10-02
+## 5.1.0 / 2025-10-02 / Agent 7.72.0
 
 ***Added***:
 
