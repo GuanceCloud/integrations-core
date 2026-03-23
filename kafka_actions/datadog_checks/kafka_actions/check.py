@@ -10,6 +10,7 @@ from datadog_checks.base import AgentCheck
 from .config import KafkaActionsConfig
 from .kafka_client import KafkaActionsClient
 from .message_deserializer import DeserializedMessage, MessageDeserializer
+from .schema_registry import SchemaRegistryClient
 
 
 class KafkaActionsCheck(AgentCheck):
@@ -32,8 +33,14 @@ class KafkaActionsCheck(AgentCheck):
         self.action = self.config.action
         self.cluster = 'unknown'  # Will be set by action handlers
 
-        self.kafka_client = KafkaActionsClient(self.instance, self.log)
-        self.deserializer = MessageDeserializer(self.log)
+        self.kafka_client = KafkaActionsClient(self.config, self.log)
+
+        schema_registry = None
+        schema_registry_url = self.instance.get('schema_registry_url')
+        if schema_registry_url:
+            schema_registry = SchemaRegistryClient(self.http, schema_registry_url, self.log, self.instance)
+
+        self.deserializer = MessageDeserializer(self.log, schema_registry=schema_registry)
 
         self.action_handlers = {
             'read_messages': self._action_read_messages,
@@ -144,6 +151,10 @@ class KafkaActionsCheck(AgentCheck):
     ):
         """Emit an event for action success or failure.
 
+        Events are sent in duplicate:
+        1. As a standard Datadog event
+        2. As a data-streams-message event
+
         Args:
             success: Whether the action succeeded
             action: Action name
@@ -155,8 +166,10 @@ class KafkaActionsCheck(AgentCheck):
         alert_type = 'success' if success else 'error'
 
         payload = {
+            'message_timestamp': int(time.time() * 1000),
             'action': action,
             'remote_config_id': self.remote_config_id,
+            'kafka_cluster_id': cluster,
             'status': 'success' if success else 'failure',
             'message': message,
         }
@@ -171,6 +184,7 @@ class KafkaActionsCheck(AgentCheck):
 
         tags = self._get_tags() + [f'kafka_cluster_id:{cluster}']
 
+        # Send as standard Datadog event (backwards compatibility; moving to Data Streams intake-only)
         event_payload = {
             'timestamp': int(time.time()),
             'event_type': f'kafka_action_{event_type}',
@@ -180,9 +194,14 @@ class KafkaActionsCheck(AgentCheck):
             'source_type_name': 'kafka',
             'aggregation_key': f'kafka_action_{action}_{self.remote_config_id}',
             'tags': tags,
+            'remote_config_id': self.remote_config_id,
+            'kafka_cluster_id': cluster,
         }
 
         self.event(event_payload)
+
+        # Send same payload to Data Streams track
+        self.event_platform_event(event_text, "data-streams-message")
 
     # =========================================================================
     # Action Handlers (RFC-Compliant)
@@ -213,6 +232,7 @@ class KafkaActionsCheck(AgentCheck):
         topic = config['topic']
         partition = config.get('partition', -1)
         start_offset = config.get('start_offset', -1)
+        start_timestamp = config.get('start_timestamp')
         n_messages_retrieved = config.get('n_messages_retrieved', 10)
         max_scanned_messages = config.get('max_scanned_messages', 1000)
         timeout_ms = config.get('timeout_ms', 20000)
@@ -223,7 +243,7 @@ class KafkaActionsCheck(AgentCheck):
             'value_format': config.get('value_format', 'json'),
             'value_schema': config.get('value_schema'),
             'value_uses_schema_registry': config.get('value_uses_schema_registry', False),
-            'key_format': config.get('key_format', 'json'),
+            'key_format': config.get('key_format', 'string'),
             'key_schema': config.get('key_schema'),
             'key_uses_schema_registry': config.get('key_uses_schema_registry', False),
         }
@@ -248,6 +268,7 @@ class KafkaActionsCheck(AgentCheck):
             topic=topic,
             partition=partition,
             start_offset=start_offset,
+            start_timestamp=start_timestamp,
             max_messages=max_scanned_messages,
             timeout_ms=timeout_ms,
             group_id=consumer_group_id,
@@ -486,57 +507,32 @@ class KafkaActionsCheck(AgentCheck):
         return value_str
 
     def _emit_message_event_deserialized(self, deserialized_msg: DeserializedMessage, cluster: str):
-        """Emit a deserialized Kafka message as a Datadog event.
+        """Emit a deserialized Kafka message to data-streams-message track.
 
         Args:
             deserialized_msg: DeserializedMessage object
             cluster: Kafka cluster identifier
         """
-        msg_dict = deserialized_msg.to_dict()
-
         event_data = {
+            'message_timestamp': deserialized_msg.timestamp,
+            'remote_config_id': self.remote_config_id,
+            'kafka_cluster_id': cluster,
             'topic': deserialized_msg.topic,
             'partition': deserialized_msg.partition,
             'offset': deserialized_msg.offset,
-            'key': msg_dict.get('key'),
-            'value': msg_dict.get('value'),
+            'key': deserialized_msg.key,
+            'value': deserialized_msg.value,
         }
 
-        if msg_dict.get('headers'):
-            event_data['headers'] = msg_dict['headers']
+        if deserialized_msg.headers:
+            event_data['headers'] = deserialized_msg.headers
 
         if deserialized_msg.value_schema_id:
             event_data['value_schema_id'] = deserialized_msg.value_schema_id
         if deserialized_msg.key_schema_id:
             event_data['key_schema_id'] = deserialized_msg.key_schema_id
 
-        event_text = json.dumps(event_data, indent=2)
-
-        event_tags = self._get_tags() + [
-            f'kafka_cluster_id:{cluster}',
-            f'topic:{deserialized_msg.topic}',
-            f'partition:{deserialized_msg.partition}',
-            f'offset:{deserialized_msg.offset}',
-        ]
-
-        event_title = f'Kafka Message: {deserialized_msg.topic}'
-
-        agg_key = (
-            f'kafka_{deserialized_msg.topic}_{deserialized_msg.partition}_'
-            f'{deserialized_msg.offset}_{self.remote_config_id}'
-        )
-
-        event_payload = {
-            'timestamp': int(time.time()),
-            'event_type': 'kafka_message',
-            'msg_title': event_title,
-            'msg_text': event_text,
-            'tags': event_tags,
-            'source_type_name': 'kafka',
-            'aggregation_key': agg_key,
-        }
-
-        self.event(event_payload)
+        self.event_platform_event(json.dumps(event_data), "data-streams-message")
 
     def _format_for_display(self, data) -> str:
         """Format data for display in event.
